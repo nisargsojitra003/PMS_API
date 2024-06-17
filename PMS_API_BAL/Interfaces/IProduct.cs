@@ -4,7 +4,7 @@ namespace PMS_API_BAL.Interfaces
 {
     public interface IProduct
     {
-        public Task<IEnumerable<AddProduct>> ProductList();
+        public Task<PagedList<AddProduct>> ProductList(int pageNumber, int pageSize, SearchFilter searchFilter);
         public Task<EditProduct> GetProduct(int id);
         public Task AddProductInDb(AddProductDTO addProduct);
         public Task EditProduct(int productId, EditProductDTO editProduct);
@@ -14,5 +14,6 @@ namespace PMS_API_BAL.Interfaces
         public Task<bool> CheckProductInDb(string productName, int categoryId);
         public Task<bool> CheckProductEditName(int productId, EditProductDTO editProduct);
         public Task<bool> CheckProductNameExist(string productName, int categoryId);
+        public Task DeleteProductImage(int productId);
     }
 }

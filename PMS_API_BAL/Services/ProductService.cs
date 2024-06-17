@@ -13,28 +13,85 @@ namespace PMS_API_BAL.Services
         {
             dbcontext = context;
         }
-        public async Task<IEnumerable<AddProduct>> ProductList()
-        {
-            List<Product> allproductList = await dbcontext.Products.Include(p => p.Category).Where(p => p.DeletedAt == null).OrderBy(p => p.Id).ToListAsync();
+        //public async Task<IEnumerable<AddProduct>> ProductList(SearchFilter searchFilter)
+        //{
+        //    List<Product> allproductList = await dbcontext.Products.Include(p => p.Category).Where(p => p.DeletedAt == null).OrderBy(p => p.Id).ToListAsync();
+        //    allproductList = allproductList.Where(p => p.Name.ToLower().Contains(searchFilter.SearchName.ToLower()));
+        //    var result = allproductList.Select(p => new AddProduct
+        //    {
+        //        ProductName = p.Name,
+        //        ProductId = p.Id,
+        //        CategoryName = p.Category.Name,
+        //        CreatedDate = p.CreatedAt,
+        //        ModiFiedDate = p.ModifiedAt,
+        //        Description = p.Description,
+        //        Price = p.Price,
+        //        CategoryTag = p.Categorytag,
+        //    }).ToList();
+        //    return result;
+        //}
 
-            var result = allproductList.Select(p => new AddProduct
+        public async Task<PagedList<AddProduct>> ProductList(int pageNumber, int pageSize, SearchFilter searchFilter)
+        {
+            IQueryable<Product> query = dbcontext.Products.Include(p => p.Category).Where(p => p.DeletedAt == null);
+
+            if (!string.IsNullOrEmpty(searchFilter.searchProduct))
             {
-                ProductName = p.Name,
-                ProductId = p.Id,
-                CategoryName = p.Category.Name,
-                CreatedDate = p.CreatedAt,
-                ModiFiedDate = p.ModifiedAt,
-                Description = p.Description,
-                Price = p.Price,
-                CategoryTag = p.Categorytag,
-            }).ToList();
-            return result;
+                query = query.Where(p => p.Name.ToLower().Contains(searchFilter.searchProduct.ToLower()));
+            }
+            if (!string.IsNullOrEmpty(searchFilter.searchCategoryTag))
+            {
+                if (!string.IsNullOrEmpty(searchFilter.searchProduct))
+                {
+                    query = query.Where(p => p.Categorytag.ToLower().Contains(searchFilter.searchCategoryTag.ToLower()) && p.Name.ToLower().Contains(searchFilter.searchProduct.ToLower()));
+                }
+                else
+                {
+                    query = query.Where(p => p.Categorytag.ToLower().Contains(searchFilter.searchCategoryTag.ToLower()));
+                }
+                pageNumber = 1;
+            }
+            if (!string.IsNullOrEmpty(searchFilter.searchDescription))
+            {
+                if (!string.IsNullOrEmpty(searchFilter.searchProduct) && (!string.IsNullOrEmpty(searchFilter.searchCategoryTag)))
+                {
+                    query = query.Where(p => p.Description.ToLower().Contains(searchFilter.searchDescription.ToLower()) && p.Name.ToLower().Contains(searchFilter.searchProduct.ToLower()) && p.Categorytag.ToLower().Contains(searchFilter.searchCategoryTag.ToLower()));
+                }
+                else
+                {
+                    query = query.Where(p => p.Description.ToLower().Contains(searchFilter.searchDescription.ToLower()));
+                }
+                pageNumber = 1;
+            }
+
+            int totalCount = query.Count();
+
+            List<AddProduct> productsList = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new AddProduct
+                {
+                    ProductId = p.Id,
+                    CategoryId = p.CategoryId,
+                    CreatedDate = p.CreatedAt,
+                    ModiFiedDate = p.ModifiedAt,
+                    ProductName = p.Name,
+                    CategoryTag = p.Categorytag,
+                    CategoryName = p.Category.Name,
+                    Description = p.Description,
+                    Price = p.Price
+                })
+                .ToListAsync();
+
+            return new PagedList<AddProduct>(productsList, totalCount, pageNumber, pageSize);
         }
+
+
 
         public async Task<AddProduct> AddProductView()
         {
-            AddProduct addProduct = new AddProduct() 
-            { 
+            AddProduct addProduct = new AddProduct()
+            {
                 categories = await dbcontext.Categories.Where(c => c.DeletedAt == null).ToListAsync(),
             };
             return addProduct;
@@ -133,7 +190,7 @@ namespace PMS_API_BAL.Services
             return addProduct;
         }
 
-        public async  Task<bool> CheckProductEditName(int productId, EditProductDTO editProduct)
+        public async Task<bool> CheckProductEditName(int productId, EditProductDTO editProduct)
         {
             // Check if the new name exists in the same category for the same user
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
@@ -151,7 +208,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProductNameExist(string productName, int categoryId)
         {
-            Product? product =await dbcontext.Products.FirstOrDefaultAsync(c => c.Name.ToLower() == productName.ToLower() && c.CategoryId == categoryId);
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Name.ToLower() == productName.ToLower() && c.CategoryId == categoryId);
             return product != null;
         }
 
@@ -231,6 +288,17 @@ namespace PMS_API_BAL.Services
             {
                 product.DeletedAt = DateTime.Now;
                 product.ModifiedAt = DateTime.Now;
+                dbcontext.Products.Update(product);
+                await dbcontext.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeleteProductImage(int productId)
+        {
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            if (product.Filename != null)
+            {
+                product.Filename = null;
                 dbcontext.Products.Update(product);
                 await dbcontext.SaveChangesAsync();
             }

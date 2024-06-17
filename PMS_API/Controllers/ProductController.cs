@@ -21,10 +21,12 @@ namespace PMS_API.Controllers
 
         [HttpGet("getallproducts", Name = "GetProductsList")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<AddProduct>>> GetAllProducts()
+        public async Task<ActionResult<PagedList<AddProduct>>> GetAllProducts([FromQuery] SearchFilter searchFilter)
         {
-            IEnumerable<AddProduct> getAllProducts = await _ProductService.ProductList();
-            return Ok(getAllProducts);
+            string pageNumber = searchFilter.productPageNumber ?? "1";
+            string pageSize = searchFilter.productPageSize ?? "5";
+            PagedList<AddProduct> getAllProducts = await _ProductService.ProductList(int.Parse(pageNumber),int.Parse(pageSize),searchFilter);
+            return getAllProducts;
         }
 
         [HttpPost("create", Name = "CreateProduct")]
@@ -112,6 +114,16 @@ namespace PMS_API.Controllers
             }
         }
 
+        [HttpPost("deleteimage/{id:int}", Name = "DeleteProductImage")]
+        public async Task<IActionResult> DeleteProductImage(int id)
+        {
+            if (id == 0)
+            {
+                return BadRequest();
+            }
+            await _ProductService.DeleteProductImage(id);
+            return Ok();
+        }
 
 
     }

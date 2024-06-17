@@ -1,12 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using PMS_API_DAL.Models;
+using PMS_API_DAL.Models.CustomeModel;
 
 namespace PMS_API_BAL.Interfaces
 {
     public interface ICategory
     {
+        public Task<IEnumerable<Category>> CategoryList();
+        public Task AddCategoryInDb(CategoryDTO addCategory);
+        public Task<bool> CheckCategoryNameInDb(string categoryName);
+        public Task<bool> CheckCategoryCodeInDb(string categoryCode);
+        public Task<Category> GetCategoryById(int id);
+        public Task<bool> IsCategoryNameOrCodeExist(CategoryDTO editCategory, int currentCategoryId);
+        public Task EditProduct(int id, CategoryDTO category);
+        public Task<bool> CategoryCount(int categoryId);
+        public Task DeleteCategory(int categoryId);
     }
 }
