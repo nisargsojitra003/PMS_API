@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using PMS_API_DAL.Models;
+using PMS_API_DAL.Models.CustomeModel;
 
 namespace PMS_API_BAL.Interfaces
 {
     public interface ILogin
     {
+        public Task<AspNetUser> LoginUser(Login model);
+        public Task<bool> CheckEmailInDb(string email);
+        public Task CreateNewUser(Login createUser);
     }
 }

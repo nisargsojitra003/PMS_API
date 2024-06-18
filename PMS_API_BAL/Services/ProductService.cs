@@ -86,6 +86,12 @@ namespace PMS_API_BAL.Services
             return new PagedList<AddProduct>(productsList, totalCount, pageNumber, pageSize);
         }
 
+        public async Task<int> TotalProducts()
+        {
+            int totalProducts = await dbcontext.Products.Include(p => p.Category).Where(p => p.DeletedAt == null).CountAsync();
+            return totalProducts;
+        }
+
 
 
         public async Task<AddProduct> AddProductView()

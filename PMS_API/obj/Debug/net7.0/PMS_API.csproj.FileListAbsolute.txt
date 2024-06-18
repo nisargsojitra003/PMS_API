@@ -50,3 +50,11 @@ C:\Users\pca103\source\repos\PMS_API\PMS_API\obj\Debug\net7.0\refint\PMS_API.dll
 C:\Users\pca103\source\repos\PMS_API\PMS_API\obj\Debug\net7.0\PMS_API.pdb
 C:\Users\pca103\source\repos\PMS_API\PMS_API\obj\Debug\net7.0\PMS_API.genruntimeconfig.cache
 C:\Users\pca103\source\repos\PMS_API\PMS_API\obj\Debug\net7.0\ref\PMS_API.dll
+C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\System.IdentityModel.Tokens.Jwt.dll

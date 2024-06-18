@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using PMS_API_BAL.Interfaces;
 using PMS_API_DAL.DataContext;
 using PMS_API_DAL.Models;
@@ -14,26 +15,61 @@ namespace PMS_API_BAL.Services
             dbcontext = context;
         }
 
-        public async Task<IEnumerable<Category>> CategoryList()
+        public async Task<PagedList<Category>> CategoryList(int pageNumber, int pageSize, SearchFilter searchFilter)
         {
-            List<Category> allproductList = await dbcontext.Categories.Where(p => p.DeletedAt == null).OrderBy(p => p.Id).ToListAsync();
+            IQueryable<Category> query = dbcontext.Categories.Where(p => p.DeletedAt == null).OrderBy(c=>c.Id);
 
-            //if (!string.IsNullOrEmpty(searchFilter.SearchName))
-            //{
-            //    allproductList = allproductList.Where(c => c.Name.ToLower().Contains(searchFilter.SearchName.ToLower()));
-            //}
-
-
-            List<Category> result = allproductList.Select(p => new Category
+            if (!string.IsNullOrEmpty(searchFilter.SearchName))
             {
-                Id = p.Id,
-                Name = p.Name,
-                Code = p.Code,
-                CreatedAt = p.CreatedAt,
-                ModifiedAt = p.ModifiedAt,
-                Description = p.Description
-            }).ToList();
-            return result;
+                query = query.Where(c => c.Name.ToLower().Trim().Contains(searchFilter.SearchName.ToLower()));
+                pageNumber = 1;
+            }
+            if (!string.IsNullOrEmpty(searchFilter.SearchCode))
+            {
+                if (!string.IsNullOrEmpty(searchFilter.SearchName))
+                {
+                    query = query.Where(c => c.Code.ToLower().Trim().Contains(searchFilter.SearchCode.ToLower()) && c.Name.ToLower().Trim().Contains(searchFilter.SearchName.ToLower()));
+                }
+                else
+                {
+                    query = query.Where(c => c.Code.ToLower().Trim().Contains(searchFilter.SearchCode.ToLower()));
+                }
+                pageNumber = 1;
+            }
+            if (!string.IsNullOrEmpty(searchFilter.description))
+            {
+                if (!string.IsNullOrEmpty(searchFilter.SearchName) && (!string.IsNullOrEmpty(searchFilter.SearchCode)))
+                {
+                    query = query.Where(c => c.Code.ToLower().Trim().Contains(searchFilter.SearchCode.ToLower()) && c.Name.ToLower().Trim().Contains(searchFilter.SearchName.ToLower()) && c.Description.ToLower().Trim().Contains(searchFilter.description.ToLower()));
+                }
+                else
+                {
+                    query = query.Where(c => c.Description.ToLower().Trim().Contains(searchFilter.description.ToLower()));
+                }
+                pageNumber = 1;
+            }
+            int totalCount = query.Count();
+
+            List<Category> categoryList = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new Category
+                {
+                   Id = p.Id,
+                   Description = p.Description,
+                   CreatedAt = p.CreatedAt,
+                   ModifiedAt = p.ModifiedAt,
+                   Name = p.Name,
+                   Code = p.Code
+                })
+                .ToListAsync();
+            return new PagedList<Category>(categoryList, totalCount, pageNumber, pageSize);
+        }
+
+        public async Task<int> totalCount()
+        {
+            int totalCount =await  dbcontext.Categories.Where(p => p.DeletedAt == null).OrderBy(c => c.Id).CountAsync();
+            return totalCount;
         }
 
         public async Task AddCategoryInDb(CategoryDTO addCategory)

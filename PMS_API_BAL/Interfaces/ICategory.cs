@@ -5,7 +5,8 @@ namespace PMS_API_BAL.Interfaces
 {
     public interface ICategory
     {
-        public Task<IEnumerable<Category>> CategoryList();
+        public Task<PagedList<Category>> CategoryList(int pageNumber, int pageSize, SearchFilter searchFilter);
+        public Task<int> totalCount();
         public Task AddCategoryInDb(CategoryDTO addCategory);
         public Task<bool> CheckCategoryNameInDb(string categoryName);
         public Task<bool> CheckCategoryCodeInDb(string categoryCode);

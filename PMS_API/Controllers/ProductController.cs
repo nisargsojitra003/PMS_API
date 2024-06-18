@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PMS_API_BAL.Interfaces;
-using PMS_API_DAL.Models;
 using PMS_API_DAL.Models.CustomeModel;
-using System.Net;
 
 namespace PMS_API.Controllers
 {
@@ -23,10 +21,15 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<PagedList<AddProduct>>> GetAllProducts([FromQuery] SearchFilter searchFilter)
         {
+            int totalProducts = await _ProductService.TotalProducts() ;
             string pageNumber = searchFilter.productPageNumber ?? "1";
             string pageSize = searchFilter.productPageSize ?? "5";
             PagedList<AddProduct> getAllProducts = await _ProductService.ProductList(int.Parse(pageNumber),int.Parse(pageSize),searchFilter);
-            return getAllProducts;
+            var response = new { 
+                TotalProducts= totalProducts,
+                productList = getAllProducts
+            };
+            return Ok(response);
         }
 
         [HttpPost("create", Name = "CreateProduct")]

@@ -5,6 +5,7 @@ namespace PMS_API_BAL.Interfaces
     public interface IProduct
     {
         public Task<PagedList<AddProduct>> ProductList(int pageNumber, int pageSize, SearchFilter searchFilter);
+        public Task<int> TotalProducts();
         public Task<EditProduct> GetProduct(int id);
         public Task AddProductInDb(AddProductDTO addProduct);
         public Task EditProduct(int productId, EditProductDTO editProduct);

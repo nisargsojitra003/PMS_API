@@ -18,10 +18,18 @@ namespace PMS_API.Controllers
         [HttpGet("getallcategories", Name = "GetCategoryList")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [Consumes("multipart/form-data")]
-        public async Task<ActionResult<IEnumerable<Category>>> GetAllCategories()
+        public async Task<ActionResult<PagedList<Category>>> GetAllCategories([FromQuery] SearchFilter searchFilter)
         {
-            IEnumerable<Category> allCategoties = await _CategoryService.CategoryList();
-            return Ok(allCategoties);
+            int totalCount = await _CategoryService.totalCount();
+            string pageNumber = searchFilter.categoryPageNumber ?? "1";
+            string pageSize = searchFilter.categoryPageSize ?? "5";
+            PagedList<Category> allCategoties = await _CategoryService.CategoryList(int.Parse(pageNumber),int.Parse(pageSize),searchFilter);
+            var response = new {
+                TotalRecords = totalCount,
+                categoriesList = allCategoties
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("getcategory/{id:int}", Name = "GetCategory")]
