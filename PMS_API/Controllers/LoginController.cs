@@ -18,6 +18,10 @@ namespace PMS_API.Controllers
 
         [HttpPost("login", Name = "UserLogin")]
         [Consumes("multipart/form-data")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Login([FromForm] Login userInfo)
         {
             if (await _LoginService.CheckEmailInDb(userInfo.Email))
@@ -33,7 +37,6 @@ namespace PMS_API.Controllers
 
                 string actionName = "";
                 string controllerName = "";
-
                 switch (user.Role)
                 {
                     case "Admin":
@@ -45,7 +48,9 @@ namespace PMS_API.Controllers
                 {
                     Action = actionName,
                     Controller = controllerName,
-                    JwtToken = jwtToken
+                    JwtToken = jwtToken,
+                    role = user.Role,
+                    userId = user.Id    
                 };
 
                 return Ok(response);
@@ -58,6 +63,10 @@ namespace PMS_API.Controllers
 
         [HttpPost("createaccount", Name = "RegisterUser")]
         [Consumes("multipart/form-data")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> CreateAccount([FromForm] Login userInfo)
         {
             if (!ModelState.IsValid)

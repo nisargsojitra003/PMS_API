@@ -13,27 +13,11 @@ namespace PMS_API_BAL.Services
         {
             dbcontext = context;
         }
-        //public async Task<IEnumerable<AddProduct>> ProductList(SearchFilter searchFilter)
-        //{
-        //    List<Product> allproductList = await dbcontext.Products.Include(p => p.Category).Where(p => p.DeletedAt == null).OrderBy(p => p.Id).ToListAsync();
-        //    allproductList = allproductList.Where(p => p.Name.ToLower().Contains(searchFilter.SearchName.ToLower()));
-        //    var result = allproductList.Select(p => new AddProduct
-        //    {
-        //        ProductName = p.Name,
-        //        ProductId = p.Id,
-        //        CategoryName = p.Category.Name,
-        //        CreatedDate = p.CreatedAt,
-        //        ModiFiedDate = p.ModifiedAt,
-        //        Description = p.Description,
-        //        Price = p.Price,
-        //        CategoryTag = p.Categorytag,
-        //    }).ToList();
-        //    return result;
-        //}
+        
 
         public async Task<PagedList<AddProduct>> ProductList(int pageNumber, int pageSize, SearchFilter searchFilter)
         {
-            IQueryable<Product> query = dbcontext.Products.Include(p => p.Category).Where(p => p.DeletedAt == null);
+            IQueryable<Product> query = dbcontext.Products.Include(r => r.Category).Where(p => (p.DeletedAt == null && p.UserId == searchFilter.userId)).OrderBy(p => p.Id).AsQueryable();
 
             if (!string.IsNullOrEmpty(searchFilter.searchProduct))
             {
@@ -86,26 +70,30 @@ namespace PMS_API_BAL.Services
             return new PagedList<AddProduct>(productsList, totalCount, pageNumber, pageSize);
         }
 
-        public async Task<int> TotalProducts()
+        public async Task<int> TotalProducts(SearchFilter searchFilter)
         {
-            int totalProducts = await dbcontext.Products.Include(p => p.Category).Where(p => p.DeletedAt == null).CountAsync();
+            int totalProducts = await dbcontext.Products.Include(p => p.Category).Where(p => p.DeletedAt == null && p.UserId == searchFilter.userId).CountAsync();
             return totalProducts;
         }
 
 
 
-        public async Task<AddProduct> AddProductView()
+        public async Task<AddProduct> AddProductView(int userId)
         {
+            List<Category> categoryList = await dbcontext.Categories
+               .Where(c => (c.DeletedAt == null && (c.UserId == userId || (c.UserId == null && c.IsSystem == true))))
+               .OrderBy(c => c.Id)
+               .ToListAsync();
             AddProduct addProduct = new AddProduct()
             {
-                categories = await dbcontext.Categories.Where(c => c.DeletedAt == null).ToListAsync(),
+                categories = categoryList
             };
             return addProduct;
         }
 
-        public async Task<bool> CheckProductInDb(string productName, int categoryId)
+        public async Task<bool> CheckProductInDb(string productName, int categoryId, int userId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Name.ToLower() == productName.ToLower() && p.CategoryId == categoryId);
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Name.ToLower() == productName.ToLower() && p.CategoryId == categoryId && p.UserId == userId);
             return product != null ? true : false;
         }
 
@@ -147,7 +135,7 @@ namespace PMS_API_BAL.Services
                     Filename = fileName,
                     Price = addProduct.Price,
                     Description = addProduct.Description.Trim(),
-                    //UserId = userId
+                    UserId = addProduct.userId
                 };
                 await dbcontext.Products.AddAsync(product);
                 await dbcontext.SaveChangesAsync();
@@ -156,7 +144,7 @@ namespace PMS_API_BAL.Services
 
         }
 
-        public async Task<EditProduct> GetProduct(int id)
+        public async Task<EditProduct> GetProduct(int id , int userId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
@@ -166,8 +154,9 @@ namespace PMS_API_BAL.Services
             }
 
             List<Category> categoryList = await dbcontext.Categories
-                .Where(c => c.DeletedAt == null)
-                .ToListAsync();
+               .Where(c => (c.DeletedAt == null && (c.UserId == userId || (c.UserId == null && c.IsSystem == true))))
+               .OrderBy(c => c.Id)
+               .ToListAsync();
 
             List<CategoryList> categoryList1 = new List<CategoryList>();
             foreach (var category in categoryList)

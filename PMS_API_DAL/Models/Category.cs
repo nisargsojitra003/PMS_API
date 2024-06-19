@@ -32,7 +32,7 @@ public partial class Category
 
     public int? UserId { get; set; }
 
-    public bool? IsSystem { get; set; }
+    public bool IsSystem { get; set; }
 
     [InverseProperty("Category")]
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();

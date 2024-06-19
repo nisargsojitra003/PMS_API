@@ -17,8 +17,10 @@ namespace PMS_API_BAL.Services
 
         public async Task<PagedList<Category>> CategoryList(int pageNumber, int pageSize, SearchFilter searchFilter)
         {
-            IQueryable<Category> query = dbcontext.Categories.Where(p => p.DeletedAt == null).OrderBy(c=>c.Id);
-
+            IQueryable<Category> query = dbcontext.Categories
+                            .Where(c => (c.DeletedAt == null && (c.UserId == searchFilter.userId || (c.UserId == null && c.IsSystem == true))))
+                            .OrderByDescending(c => c.IsSystem == true).ThenBy(c => c.Id)
+                            .AsQueryable();
             if (!string.IsNullOrEmpty(searchFilter.SearchName))
             {
                 query = query.Where(c => c.Name.ToLower().Trim().Contains(searchFilter.SearchName.ToLower()));
@@ -48,6 +50,47 @@ namespace PMS_API_BAL.Services
                 }
                 pageNumber = 1;
             }
+
+            if (query.Count() >= 2)
+            {
+                switch (searchFilter.sortType)
+                {
+                    case 1:
+                        query = query.OrderBy(c => c.Name);
+                        break;
+                    case 2:
+                        query = query.OrderByDescending(c => c.Name);
+                        break;
+                    case 3:
+                        query = query.OrderBy(c => c.Code);
+                        break;
+                    case 4:
+                        query = query.OrderByDescending(c => c.Code);
+                        break;
+                    case 5:
+                        query = query.OrderBy(c => c.CreatedAt);
+                        break;
+                    case 6:
+                        query = query.OrderByDescending(c => c.CreatedAt);
+                        break;
+                    case 7:
+                        query = query.OrderBy(c => c.ModifiedAt);
+                        break;
+                    case 8:
+                        query = query.OrderByDescending(c => c.ModifiedAt);
+                        break;
+                    case 9:
+                        query = query.OrderBy(c => c.Description);
+                        break;
+                    case 10:
+                        query = query.OrderByDescending(c => c.Description);
+                        break;
+                    default:
+                        query = query.AsQueryable();
+                        break;
+                }
+            }
+
             int totalCount = query.Count();
 
             List<Category> categoryList = await query
@@ -60,15 +103,19 @@ namespace PMS_API_BAL.Services
                    CreatedAt = p.CreatedAt,
                    ModifiedAt = p.ModifiedAt,
                    Name = p.Name,
-                   Code = p.Code
+                   Code = p.Code,
+                   IsSystem = p.IsSystem
                 })
                 .ToListAsync();
             return new PagedList<Category>(categoryList, totalCount, pageNumber, pageSize);
         }
 
-        public async Task<int> totalCount()
+        public async Task<int> totalCount(SearchFilter searchFilter)
         {
-            int totalCount =await  dbcontext.Categories.Where(p => p.DeletedAt == null).OrderBy(c => c.Id).CountAsync();
+            int totalCount = await dbcontext.Categories
+                            .Where(c => (c.DeletedAt == null && (c.UserId == searchFilter.userId || (c.UserId == null && c.IsSystem == true))))
+                            .OrderByDescending(c => c.IsSystem == true).ThenBy(c => c.Id)
+                            .CountAsync();
             return totalCount;
         }
 
@@ -80,25 +127,27 @@ namespace PMS_API_BAL.Services
                 Code = addCategory.Code,
                 CreatedAt = DateTime.Now,
                 IsSystem = false,
-                Description = addCategory.Description
+                Description = addCategory.Description,
+                UserId = addCategory.UserId
+                
             };
             await dbcontext.Categories.AddAsync(category);
             await dbcontext.SaveChangesAsync();
         }
 
-        public async Task<bool> CheckCategoryNameInDb(string categoryName)
+        public async Task<bool> CheckCategoryNameInDb(string categoryName, int userId)
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c =>
-                (c.Name.ToLower().Trim() == categoryName.ToLower().Trim()) ||
+                (c.Name.ToLower().Trim() == categoryName.ToLower().Trim() && c.UserId == userId) ||
                 (c.Name.ToLower().Trim() == categoryName.ToLower().Trim() && c.IsSystem == true)
             );
             return category != null;
         }
 
-        public async Task<bool> CheckCategoryCodeInDb(string categoryCode)
+        public async Task<bool> CheckCategoryCodeInDb(string categoryCode, int userId)
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c =>
-                (c.Code.ToLower().Trim() == categoryCode.ToLower().Trim()) ||
+                (c.Code.ToLower().Trim() == categoryCode.ToLower().Trim() && c.UserId == userId) ||
                 (c.Code.ToLower().Trim() == categoryCode.ToLower().Trim() && c.IsSystem == true)
             );
             return category != null;
@@ -118,11 +167,11 @@ namespace PMS_API_BAL.Services
             return getCategory;
         }
 
-        public async Task<bool> IsCategoryNameOrCodeExist(CategoryDTO editCategory, int currentCategoryId)
+        public async Task<bool> IsCategoryNameOrCodeExist(CategoryDTO editCategory, int currentCategoryId , int userId)
         {
             return await dbcontext.Categories.AnyAsync(c =>
                 (c.Name.ToLower() == editCategory.Name.ToLower() || c.Code.ToLower() == editCategory.Code.ToLower()) &&
-                c.Id != currentCategoryId);
+                c.Id != currentCategoryId && (c.UserId == userId || c.IsSystem == true));
         }
 
         public async Task EditProduct(int id, CategoryDTO category)

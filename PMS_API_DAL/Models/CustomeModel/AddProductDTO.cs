@@ -10,6 +10,8 @@ namespace PMS_API_DAL.Models.CustomeModel
         [RegularExpression(@"^[a-zA-Z][a-zA-Z0-9 .]*$", ErrorMessage = "Product name must start with an alphabetic character and can contain alphanumeric characters, spaces, and floating numbers.")]
         public string? ProductName { get; set; }
 
+        public int? userId { get; set; }
+
         [Required(ErrorMessage = "Description is required")]
         [StringLength(499, ErrorMessage = "Only 499 Characaters are Accepted")]
         [RegularExpression(@"^(?!\s*$).+", ErrorMessage = "Please Write a Description.")]

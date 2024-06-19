@@ -12,6 +12,8 @@ namespace PMS_API_DAL.Models.CustomeModel
 
         public int? ProductId {  get; set; }
 
+        public int? userId {  get; set; }
+
         [Required(ErrorMessage = "Description is required")]
         [StringLength(499, ErrorMessage = "Only 499 Characaters are Accepted")]
         [RegularExpression(@"^(?!\s*$).+", ErrorMessage = "Please Write a Description.")]
