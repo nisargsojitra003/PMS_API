@@ -22,6 +22,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> Login([FromForm] Login userInfo)
         {
             if (await _LoginService.CheckEmailInDb(userInfo.Email))
@@ -67,6 +68,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> CreateAccount([FromForm] Login userInfo)
         {
             if (!ModelState.IsValid)

@@ -1,44 +1,74 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Net;
-using System.Net.Mime;
+using PMS_API_DAL.Models.CustomeModel.Exceptions;
 using System.Text.Json;
 
 namespace PMS_API_DAL.Models.CustomeModel
 {
-    public class ExceptionMiddleware
+    public class ExceptionMiddleware : IMiddleware
     {
         private readonly ILogger<ExceptionMiddleware> _logger;
-        private readonly RequestDelegate _next;
 
-        public ExceptionMiddleware(ILogger<ExceptionMiddleware> logger, RequestDelegate next)
+        public ExceptionMiddleware(ILogger<ExceptionMiddleware> logger)
         {
             _logger = logger;
-            _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context)
+        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             try
             {
-                await _next(context);
+                await next(context);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
-
-                await HandleExceptionAsync(context, ex);
+                _logger.LogError($"Something went wrong: {ex.Message}");
+                await HandleException(context, ex);
             }
         }
 
-        public async Task HandleExceptionAsync(HttpContext context , Exception ex)
+        private static Task HandleException(HttpContext context, Exception ex)
         {
-            context.Response.ContentType = MediaTypeNames.Application.Json;
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            int statusCode = StatusCodes.Status500InternalServerError;
+            switch (ex)
+            {
+                case NotFoundException _:
+                    statusCode = StatusCodes.Status404NotFound;
+                    break;
+                case BadRequestException _:
+                    statusCode = StatusCodes.Status400BadRequest;
+                    break;
+                case NullReferenceException _:
+                    statusCode = StatusCodes.Status404NotFound;
+                    break;
+                default:
+                    statusCode = StatusCodes.Status500InternalServerError;
+                    break;
+            }
 
-            var response = new CustomResponse(context.Response.StatusCode, ex.Message, "Internal server Error");
-            var json = JsonSerializer.Serialize(response);
-            await context.Response.WriteAsync(json);
+            var errorResponse = new ErrorResponse()
+            {
+                StatusCode = statusCode,
+                Message = ex.Message
+            };
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = statusCode;
+            return context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
         }
+    }
+
+    public static class ExceptionMiddlewareExtension
+    {
+        public static void ConfigureExceptionMiddleware(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<ExceptionMiddleware>();
+        }
+    }
+
+    public class ErrorResponse
+    {
+        public int? StatusCode { get; set; }
+        public string? Message { get; set; }
     }
 }

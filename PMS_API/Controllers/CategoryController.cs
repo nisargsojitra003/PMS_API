@@ -22,6 +22,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Consumes("multipart/form-data")]
         public async Task<ActionResult<PagedList<Category>>> GetAllCategories([FromQuery] SearchFilter searchFilter)
         {
@@ -42,6 +43,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpGet("getcategory/{id:int}", Name = "GetCategory")]
 
         public async Task<ActionResult<Category>> GetCategory(int id)
@@ -59,6 +61,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpPost("create", Name = "CreateCategory")]
         [Consumes("multipart/form-data")]
         public async Task<ActionResult> CreateCategory([FromForm] CategoryDTO addCategory)
@@ -84,6 +87,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpPut("edit/{id:int}", Name = "EditCategory")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UpdateCategory(int id , [FromForm]CategoryDTO category)
@@ -105,6 +109,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpPost("delete/{id:int}",Name ="DeleteCategory")]
         public async Task<IActionResult> DeleteCategory(int id)
         {

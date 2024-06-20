@@ -14,7 +14,8 @@ namespace PMS_API_BAL.Interfaces
         public Task<EditProduct> EditProductView();
         public Task<bool> CheckProductInDb(string productName, int categoryId, int userId);
         public Task<bool> CheckProductEditName(int productId, EditProductDTO editProduct);
-        public Task<bool> CheckProductNameExist(string productName, int categoryId);
+        public Task<bool> CheckProductNameExist(string productName, int categoryId, int userId);
         public Task DeleteProductImage(int productId);
+        public Task<TotalCount> totalCount(int userId);
     }
 }

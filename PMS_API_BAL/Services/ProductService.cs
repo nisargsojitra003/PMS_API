@@ -48,6 +48,64 @@ namespace PMS_API_BAL.Services
                 pageNumber = 1;
             }
 
+            if (searchFilter.searchCategory != 0)
+            {
+                query = query.Where(p => p.CategoryId == searchFilter.searchCategory);
+
+            }
+
+            if (query.Count() >= 2)
+            {
+                switch (searchFilter.sortTypeProduct)
+                {
+                    case 1:
+                        query = query.OrderBy(p => p.Name);
+                        break;
+                    case 2:
+                        query = query.OrderByDescending(p => p.Name);
+                        break;
+                    case 3:
+                        query = query.OrderBy(p => p.Price);
+                        break;
+                    case 4:
+                        query = query.OrderByDescending(p => p.Price);
+                        break;
+                    case 5:
+                        query = query.OrderBy(p => p.Description);
+                        break;
+                    case 6:
+                        query = query.OrderByDescending(p => p.Description);
+                        break;
+                    case 7:
+                        query = query.OrderBy(p => p.CreatedAt);
+                        break;
+                    case 8:
+                        query = query.OrderByDescending(p => p.CreatedAt);
+                        break;
+                    case 9:
+                        query = query.OrderBy(p => p.ModifiedAt);
+                        break;
+                    case 10:
+                        query = query.OrderByDescending(p => p.ModifiedAt);
+                        break;
+                    case 11:
+                        query = query.OrderBy(p => p.Categorytag);
+                        break;
+                    case 12:
+                        query = query.OrderByDescending(p => p.Categorytag);
+                        break;
+                    case 13:
+                        query = query.OrderBy(p => p.Category.Name);
+                        break;
+                    case 14:
+                        query = query.OrderByDescending(p => p.Category.Name);
+                        break;
+                    default:
+                        query = query.AsQueryable();
+                        break;
+                }
+            }
+
             int totalCount = query.Count();
 
             List<AddProduct> productsList = await query
@@ -196,14 +254,14 @@ namespace PMS_API_BAL.Services
 
             if (editProduct.ProductName.ToLower() != product.Name.ToLower() || editProduct.CategoryId != product.CategoryId)
             {
-                return await CheckProductNameExist(editProduct.ProductName, (int)editProduct.CategoryId);
+                return await CheckProductNameExist(editProduct.ProductName, (int)editProduct.CategoryId,(int)editProduct.userId);
             }
             return false;
         }
 
-        public async Task<bool> CheckProductNameExist(string productName, int categoryId)
+        public async Task<bool> CheckProductNameExist(string productName, int categoryId,int userId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Name.ToLower() == productName.ToLower() && c.CategoryId == categoryId);
+            Product? product = await  dbcontext.Products.FirstOrDefaultAsync(c => c.Name.ToLower() == productName.ToLower() && c.CategoryId == categoryId && c.UserId == userId);
             return product != null;
         }
 
@@ -297,6 +355,20 @@ namespace PMS_API_BAL.Services
                 dbcontext.Products.Update(product);
                 await dbcontext.SaveChangesAsync();
             }
+        }
+
+        public async Task<TotalCount> totalCount(int userId)
+        {
+            List<Category> categoryList = await dbcontext.Categories
+               .Where(c => (c.DeletedAt == null && (c.UserId == userId || (c.UserId == null && c.IsSystem == true))))
+               .OrderBy(c => c.Id)
+               .ToListAsync();
+            TotalCount totalCount = new TotalCount()
+            {
+                totalCategories =  categoryList.Count(),
+                totalProducts = await dbcontext.Products.Where(p => (p.DeletedAt == null && p.UserId == userId)).CountAsync()
+            };
+            return totalCount;
         }
 
 

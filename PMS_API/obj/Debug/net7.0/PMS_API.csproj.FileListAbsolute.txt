@@ -58,3 +58,5 @@ C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\Microsoft.Identity
 C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\System.Net.Http.Formatting.dll
+C:\Users\pca103\source\repos\PMS_API\PMS_API\bin\Debug\net7.0\System.Web.Http.dll

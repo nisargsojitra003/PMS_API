@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using PMS_API_BAL.Interfaces;
 using PMS_API_BAL.Services;
 using PMS_API_DAL.DataContext;
+using PMS_API_DAL.Models.CustomeModel;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,7 @@ builder.Services.AddScoped<ICategory, CategoryService>();
 builder.Services.AddScoped<IJwt, JwtServices>();
 builder.Services.AddScoped<ILogin , LoginService>();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSingleton<ExceptionMiddleware>();
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme 
@@ -89,6 +91,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.ConfigureExceptionMiddleware();
 //app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
 

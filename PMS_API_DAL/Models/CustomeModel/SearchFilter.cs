@@ -16,7 +16,7 @@
         public string? searchCategoryTag { get; set; }
         public string? searchDescription { get; set; }
         public int? sortTypeProduct { get; set; }
-        //public int? searchCategory { get; set; } = 0;
+        public int? searchCategory { get; set; } = 0;
         public string? productPageSize {get; set;}
         public string? productPageNumber {get; set;}
     }
