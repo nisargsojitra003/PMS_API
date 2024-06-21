@@ -16,6 +16,11 @@ namespace PMS_API.Controllers
             _CategoryService = category;
         }
 
+        /// <summary>
+        /// Get all category list.
+        /// </summary>
+        /// <param name="searchFilter">Filter criteria for searching categories.</param>
+        /// <returns>All categories that match the filter and pagination criteria.</returns>
         [Authorize]
         [HttpGet("getallcategories", Name = "GetCategoryList")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -23,14 +28,14 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [Consumes("multipart/form-data")]
         public async Task<ActionResult<PagedList<Category>>> GetAllCategories([FromQuery] SearchFilter searchFilter)
         {
             int totalCount = await _CategoryService.totalCount(searchFilter);
             string pageNumber = searchFilter.categoryPageNumber ?? "1";
             string pageSize = searchFilter.categoryPageSize ?? "5";
-            PagedList<Category> allCategoties = await _CategoryService.CategoryList(int.Parse(pageNumber),int.Parse(pageSize),searchFilter);
-            var response = new {
+            PagedList<Category> allCategoties = await _CategoryService.CategoryList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
+            var response = new
+            {
                 TotalRecords = totalCount,
                 categoriesList = allCategoties
             };
@@ -38,6 +43,11 @@ namespace PMS_API.Controllers
             return Ok(response);
         }
 
+        /// <summary>
+        /// Gets the details of a category by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the category to retrieve.</param>
+        /// <returns>The details of the specified category.</returns>
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -45,17 +55,25 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpGet("getcategory/{id:int}", Name = "GetCategory")]
-
         public async Task<ActionResult<Category>> GetCategory(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid category ID.");
+            }
             Category category = await _CategoryService.GetCategoryById(id);
             if (category == null)
             {
-                return BadRequest();
+                return NotFound("Category not found.");
             }
             return Ok(category);
         }
 
+        /// <summary>
+        /// Create category method.
+        /// </summary>
+        /// <param name="addCategory"></param>
+        /// <returns>Indicating success or failure</returns>
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -63,14 +81,13 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpPost("create", Name = "CreateCategory")]
-        [Consumes("multipart/form-data")]
         public async Task<ActionResult> CreateCategory([FromForm] CategoryDTO addCategory)
         {
             if (!ModelState.IsValid)
             {
                 return NotFound();
             }
-            if (await _CategoryService.CheckCategoryNameInDb(addCategory.Name,(int)addCategory.UserId))
+            if (await _CategoryService.CheckCategoryNameInDb(addCategory.Name, (int)addCategory.UserId))
             {
                 return BadRequest();
             }
@@ -82,6 +99,12 @@ namespace PMS_API.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Updates an existing category.
+        /// </summary>
+        /// <param name="id">The ID of the category to update.</param>
+        /// <param name="category">The updated category data.</param>
+        /// <returns>Indicating success or failure</returns>
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -89,14 +112,13 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpPut("edit/{id:int}", Name = "EditCategory")]
-        [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UpdateCategory(int id , [FromForm]CategoryDTO category)
+        public async Task<IActionResult> UpdateCategory(int id, [FromForm] CategoryDTO category)
         {
-            if(id != category.Id)
+            if (id != category.Id)
             {
                 return NotFound();
             }
-            if (await _CategoryService.IsCategoryNameOrCodeExist(category, id,(int)category.UserId))
+            if (await _CategoryService.IsCategoryNameOrCodeExist(category, id, (int)category.UserId))
             {
                 return BadRequest();
             }
@@ -104,22 +126,26 @@ namespace PMS_API.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Soft deletes a particular category.
+        /// </summary>
+        /// <param name="id">The ID of the category to delete.</param>
+        /// <returns>ActionResult indicating success or failure of the operation.</returns>
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [HttpPost("delete/{id:int}",Name ="DeleteCategory")]
+        [HttpPost("delete/{id:int}", Name = "DeleteCategory")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            if (! await _CategoryService.CategoryCount(id))
+            if (!await _CategoryService.CategoryCount(id))
             {
                 return BadRequest();
             }
             await _CategoryService.DeleteCategory(id);
             return Ok();
         }
-
     }
 }

@@ -13,11 +13,14 @@ namespace PMS_API_BAL.Services
         {
             dbcontext = context;
         }
-        
+
 
         public async Task<PagedList<AddProduct>> ProductList(int pageNumber, int pageSize, SearchFilter searchFilter)
         {
-            IQueryable<Product> query = dbcontext.Products.Include(r => r.Category).Where(p => (p.DeletedAt == null && p.UserId == searchFilter.userId)).OrderBy(p => p.Id).AsQueryable();
+            IQueryable<Product> query = dbcontext.Products.Include(r => r.Category)
+                .Where(p => (p.DeletedAt == null && p.UserId == searchFilter.userId))
+                .OrderBy(p => p.Id)
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchFilter.searchProduct))
             {
@@ -101,9 +104,8 @@ namespace PMS_API_BAL.Services
                         query = query.OrderByDescending(p => p.Category.Name);
                         break;
                     default:
-                        query = query.AsQueryable();
                         break;
-                }
+                }   
             }
 
             int totalCount = query.Count();
@@ -130,11 +132,15 @@ namespace PMS_API_BAL.Services
 
         public async Task<int> TotalProducts(SearchFilter searchFilter)
         {
-            int totalProducts = await dbcontext.Products.Include(p => p.Category).Where(p => p.DeletedAt == null && p.UserId == searchFilter.userId).CountAsync();
+            int totalProducts = await dbcontext.Products.Where(p => p.DeletedAt == null && p.UserId == searchFilter.userId).CountAsync();
+
+            var q1 = dbcontext.Products.Include(a => a.Category).Where(p => p.DeletedAt == null && p.UserId == searchFilter.userId).ToList();
+
+            var q2 = dbcontext.Products.Where(p => p.DeletedAt == null && p.UserId == searchFilter.userId).ToList();
+
+
             return totalProducts;
         }
-
-
 
         public async Task<AddProduct> AddProductView(int userId)
         {
@@ -202,7 +208,7 @@ namespace PMS_API_BAL.Services
 
         }
 
-        public async Task<EditProduct> GetProduct(int id , int userId)
+        public async Task<EditProduct> GetProduct(int id, int userId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
@@ -254,17 +260,16 @@ namespace PMS_API_BAL.Services
 
             if (editProduct.ProductName.ToLower() != product.Name.ToLower() || editProduct.CategoryId != product.CategoryId)
             {
-                return await CheckProductNameExist(editProduct.ProductName, (int)editProduct.CategoryId,(int)editProduct.userId);
+                return await CheckProductNameExist(editProduct.ProductName, (int)editProduct.CategoryId, (int)editProduct.userId);
             }
             return false;
         }
 
-        public async Task<bool> CheckProductNameExist(string productName, int categoryId,int userId)
+        public async Task<bool> CheckProductNameExist(string productName, int categoryId, int userId)
         {
-            Product? product = await  dbcontext.Products.FirstOrDefaultAsync(c => c.Name.ToLower() == productName.ToLower() && c.CategoryId == categoryId && c.UserId == userId);
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Name.ToLower() == productName.ToLower() && c.CategoryId == categoryId && c.UserId == userId);
             return product != null;
         }
-
 
         public async Task EditProduct(int productId, EditProductDTO editProduct)
         {
@@ -365,15 +370,10 @@ namespace PMS_API_BAL.Services
                .ToListAsync();
             TotalCount totalCount = new TotalCount()
             {
-                totalCategories =  categoryList.Count(),
+                totalCategories = categoryList.Count(),
                 totalProducts = await dbcontext.Products.Where(p => (p.DeletedAt == null && p.UserId == userId)).CountAsync()
             };
             return totalCount;
         }
-
-
-
     }
-
 }
-

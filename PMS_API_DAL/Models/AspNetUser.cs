@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace PMS_API_DAL.Models;
 
@@ -14,7 +11,7 @@ public partial class AspNetUser
     [StringLength(60)]
     public string Email { get; set; } = null!;
 
-    [StringLength(50)]
+    [StringLength(300)]
     public string Password { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }

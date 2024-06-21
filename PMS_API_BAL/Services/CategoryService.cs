@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PMS_API_BAL.Interfaces;
 using PMS_API_DAL.DataContext;
 using PMS_API_DAL.Models;
@@ -98,13 +97,13 @@ namespace PMS_API_BAL.Services
                 .Take(pageSize)
                 .Select(p => new Category
                 {
-                   Id = p.Id,
-                   Description = p.Description,
-                   CreatedAt = p.CreatedAt,
-                   ModifiedAt = p.ModifiedAt,
-                   Name = p.Name,
-                   Code = p.Code,
-                   IsSystem = p.IsSystem
+                    Id = p.Id,
+                    Description = p.Description,
+                    CreatedAt = p.CreatedAt,
+                    ModifiedAt = p.ModifiedAt,
+                    Name = p.Name,
+                    Code = p.Code,
+                    IsSystem = p.IsSystem
                 })
                 .ToListAsync();
             return new PagedList<Category>(categoryList, totalCount, pageNumber, pageSize);
@@ -129,7 +128,7 @@ namespace PMS_API_BAL.Services
                 IsSystem = false,
                 Description = addCategory.Description,
                 UserId = addCategory.UserId
-                
+
             };
             await dbcontext.Categories.AddAsync(category);
             await dbcontext.SaveChangesAsync();
@@ -137,20 +136,16 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckCategoryNameInDb(string categoryName, int userId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c =>
-                (c.Name.ToLower().Trim() == categoryName.ToLower().Trim() && c.UserId == userId) ||
-                (c.Name.ToLower().Trim() == categoryName.ToLower().Trim() && c.IsSystem == true)
-            );
-            return category != null;
+            return await dbcontext.Categories
+                .AnyAsync(c => (c.Name.ToLower().Trim() == categoryName.ToLower().Trim() && c.UserId == userId) ||
+                               (c.Name.ToLower().Trim() == categoryName.ToLower().Trim() && c.IsSystem == true));
         }
 
         public async Task<bool> CheckCategoryCodeInDb(string categoryCode, int userId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c =>
-                (c.Code.ToLower().Trim() == categoryCode.ToLower().Trim() && c.UserId == userId) ||
-                (c.Code.ToLower().Trim() == categoryCode.ToLower().Trim() && c.IsSystem == true)
-            );
-            return category != null;
+            return await dbcontext.Categories
+                .AnyAsync(c => (c.Code.ToLower().Trim() == categoryCode.ToLower().Trim() && c.UserId == userId) ||
+                               (c.Code.ToLower().Trim() == categoryCode.ToLower().Trim() && c.IsSystem == true));
         }
 
         public async Task<Category> GetCategoryById(int id)
@@ -167,7 +162,7 @@ namespace PMS_API_BAL.Services
             return getCategory;
         }
 
-        public async Task<bool> IsCategoryNameOrCodeExist(CategoryDTO editCategory, int currentCategoryId , int userId)
+        public async Task<bool> IsCategoryNameOrCodeExist(CategoryDTO editCategory, int currentCategoryId, int userId)
         {
             return await dbcontext.Categories.AnyAsync(c =>
                 (c.Name.ToLower() == editCategory.Name.ToLower() || c.Code.ToLower() == editCategory.Code.ToLower()) &&

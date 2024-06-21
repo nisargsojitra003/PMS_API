@@ -10,11 +10,16 @@ namespace PMS_API.Controllers
     public class HomeController : ControllerBase
     {
         private readonly IProduct _ProductService;
-        public HomeController( IProduct product)
+        public HomeController(IProduct product)
         {
             _ProductService = product;
         }
 
+        /// <summary>
+        /// Get Counts of user's TotalCategory and TotalProduct
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [Authorize]
         [HttpGet("index", Name = "Index")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -24,7 +29,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<TotalCount>> Index(int id)
         {
-            if(id == 0)
+            if (id == 0)
             {
                 return BadRequest();
             }
