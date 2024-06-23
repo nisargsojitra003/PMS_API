@@ -12,3 +12,17 @@ C:\Users\pca103\source\repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\refint\PMS_API
 C:\Users\pca103\source\repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\PMS_API_DAL.pdb
 C:\Users\pca103\source\repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\PMS_API_DAL.genruntimeconfig.cache
 C:\Users\pca103\source\repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\ref\PMS_API_DAL.dll
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\bin\Debug\net7.0\PMS_API_DAL.deps.json
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\bin\Debug\net7.0\PMS_API_DAL.runtimeconfig.json
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\bin\Debug\net7.0\PMS_API_DAL.dll
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\bin\Debug\net7.0\PMS_API_DAL.pdb
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\PMS_API_DAL.csproj.AssemblyReference.cache
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\PMS_API_DAL.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\PMS_API_DAL.AssemblyInfoInputs.cache
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\PMS_API_DAL.AssemblyInfo.cs
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\PMS_API_DAL.csproj.CoreCompileInputs.cache
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\PMS_API_DAL.dll
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\refint\PMS_API_DAL.dll
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\PMS_API_DAL.pdb
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\PMS_API_DAL.genruntimeconfig.cache
+C:\Users\hp\Source\Repos\PMS_API\PMS_API_DAL\obj\Debug\net7.0\ref\PMS_API_DAL.dll
