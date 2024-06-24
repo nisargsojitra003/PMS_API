@@ -22,6 +22,8 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
+    public virtual DbSet<UserActivity> UserActivities { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseNpgsql("User ID = postgres;Password=nisarg1705;Server=localhost;Port=5432;Database=Product_DB;Integrated Security=true;Pooling=true;");
@@ -53,6 +55,15 @@ public partial class ApplicationDbContext : DbContext
                 .HasConstraintName("product_categotyid_fkey");
 
             entity.HasOne(d => d.User).WithMany(p => p.Products).HasConstraintName("fk_userid");
+        });
+
+        modelBuilder.Entity<UserActivity>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("UserActivity_pkey");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserActivities)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("UserId");
         });
 
         OnModelCreatingPartial(modelBuilder);

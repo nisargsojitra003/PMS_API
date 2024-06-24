@@ -130,14 +130,15 @@ namespace PMS_API_BAL.Services
             return new PagedList<AddProduct>(productsList, totalCount, pageNumber, pageSize);
         }
 
+        public async Task<List<UserActivity>> UserActivityList(int userId)
+        {
+            var activityList = await dbcontext.UserActivities.Where(u => u.UserId == userId).OrderByDescending(u => u.CreatedAt).ToListAsync();
+            return activityList;
+        }
+
         public async Task<int> TotalProducts(SearchFilter searchFilter)
         {
             int totalProducts = await dbcontext.Products.Where(p => p.DeletedAt == null && p.UserId == searchFilter.userId).CountAsync();
-
-            var q1 = dbcontext.Products.Include(a => a.Category).Where(p => p.DeletedAt == null && p.UserId == searchFilter.userId).ToList();
-
-            var q2 = dbcontext.Products.Where(p => p.DeletedAt == null && p.UserId == searchFilter.userId).ToList();
-
 
             return totalProducts;
         }
@@ -223,7 +224,7 @@ namespace PMS_API_BAL.Services
                .ToListAsync();
 
             List<CategoryList> categoryList1 = new List<CategoryList>();
-            foreach (var category in categoryList)
+            foreach (Category category in categoryList)
             {
                 categoryList1.Add(new CategoryList
                 {
@@ -284,7 +285,7 @@ namespace PMS_API_BAL.Services
 
                     if (File.Exists(filePath1Main))
                     {
-                        File.Delete(fileNameMain);
+                        File.Delete(filePath1Main);
                     }
 
                     product.Filename = null;
@@ -351,6 +352,21 @@ namespace PMS_API_BAL.Services
             }
         }
 
+
+        public async Task<string> ProductName(int productId)
+        {
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Id == productId);
+            string name = product.Name;
+            return name;
+        }
+
+        public async Task<int> ProductUserid(int productId)
+        {
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Id == productId);
+            int userId = (int)product.UserId;
+            return userId;
+        }
+
         public async Task DeleteProductImage(int productId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
@@ -375,5 +391,6 @@ namespace PMS_API_BAL.Services
             };
             return totalCount;
         }
+
     }
 }

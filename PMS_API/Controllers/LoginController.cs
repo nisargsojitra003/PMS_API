@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PMS_API_BAL.Interfaces;
+using PMS_API_DAL.Models;
 using PMS_API_DAL.Models.CustomeModel;
 
 namespace PMS_API.Controllers
@@ -16,6 +17,7 @@ namespace PMS_API.Controllers
             _JwtService = jwtService;
         }
 
+        #region Login Method
         /// <summary>
         /// Check user is validate
         /// </summary>
@@ -35,7 +37,7 @@ namespace PMS_API.Controllers
                 return NotFound();
             }
 
-            var user = await _LoginService.LoginUser(userInfo);
+            AspNetUser user = await _LoginService.LoginUser(userInfo);
             if (user != null)
             {
                 string jwtToken = _JwtService.GenerateToken(user);
@@ -70,7 +72,9 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
         }
+        #endregion
 
+        #region CreateAccount Post Method
         /// <summary>
         /// Create account method
         /// </summary>
@@ -99,7 +103,9 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
         }
+        #endregion
 
+        #region Logout
         /// <summary>
         /// Logout method
         /// </summary>
@@ -122,9 +128,6 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
         }
-
-
-
-
+        #endregion
     }
 }

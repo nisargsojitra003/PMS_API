@@ -22,7 +22,7 @@ namespace PMS_API_BAL.Services
         {
             string list = "";
 
-            var claims = new List<Claim>
+            List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Email, user.Email),
 
@@ -32,12 +32,12 @@ namespace PMS_API_BAL.Services
             };
 
 
-            var key = new SymmetricSecurityKey(
+            SymmetricSecurityKey key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.UtcNow.AddDays(7);
+            SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            DateTime expires = DateTime.UtcNow.AddDays(7);
 
-            var token = new JwtSecurityToken(
+            JwtSecurityToken token = new JwtSecurityToken(
                 _configuration["Jwt:Issuer"],
                 _configuration["Jwt:Audience"],
                 claims,
@@ -55,8 +55,8 @@ namespace PMS_API_BAL.Services
             if (token == null)
                 return false;
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            byte[] key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
             try
             {
                 tokenHandler.ValidateToken(token, new TokenValidationParameters

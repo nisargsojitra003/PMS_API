@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMS_API_BAL.Interfaces;
+using PMS_API_DAL.Models;
 using PMS_API_DAL.Models.CustomeModel;
 
 namespace PMS_API.Controllers
@@ -11,13 +12,18 @@ namespace PMS_API.Controllers
     {
         private readonly ILogger<ProductController> _logger;
         private readonly IProduct _ProductService;
+        private readonly ICategory _CategoryService;
+        private readonly ActivityMessages activityMessages;
 
-        public ProductController(ILogger<ProductController> logger, IProduct product)
+        public ProductController(ILogger<ProductController> logger, IProduct product, ICategory categoryService, ActivityMessages _activityMessages)
         {
             _logger = logger;
             _ProductService = product;
+            _CategoryService = categoryService;
+            activityMessages = _activityMessages;
         }
 
+        #region GetAllProducts
         /// <summary>
         /// Get all product list
         /// </summary>
@@ -43,7 +49,9 @@ namespace PMS_API.Controllers
             };
             return Ok(response);
         }
+        #endregion
 
+        #region CreateProduct Post Method
         /// <summary>
         /// Create Product method
         /// </summary>
@@ -68,9 +76,13 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
             await _ProductService.AddProductInDb(product);
+            string description = activityMessages.addProduct.Replace("{1}", product.ProductName);
+            await _CategoryService.CreateActivity(description, (int)product.userId);
             return Ok();
         }
+        #endregion
 
+        #region Category List by user for add method
         /// <summary>
         /// Get all category list for custom models
         /// </summary>
@@ -92,7 +104,9 @@ namespace PMS_API.Controllers
             }
             return Ok(categories);
         }
+        #endregion
 
+        #region Category List by user for edit method
         /// <summary>
         /// Get all category list for custom models
         /// </summary>
@@ -113,7 +127,9 @@ namespace PMS_API.Controllers
             }
             return Ok(categories);
         }
+        #endregion
 
+        #region Get Product for edit method
         /// <summary>
         /// Get Product by product id 
         /// </summary>
@@ -129,14 +145,23 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<EditProduct>> GetProduct(int id, int userId)
         {
-            EditProduct product = await _ProductService.GetProduct(id, userId);
-            if (product == null)
+            try
             {
-                return BadRequest();
+                EditProduct product = await _ProductService.GetProduct(id, userId);
+                if (product == null)
+                {
+                    return BadRequest();
+                }
+                return Ok(product);
             }
-            return Ok(product);
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Failed to delete product: {ex.Message}");
+            }
         }
+        #endregion
 
+        #region Edit Product Put method
         /// <summary>
         /// Edit product httpput method
         /// </summary>
@@ -164,9 +189,13 @@ namespace PMS_API.Controllers
             }
 
             await _ProductService.EditProduct(id, editProduct);
+            string description = activityMessages.editProduct.Replace("{1}", editProduct.ProductName);
+            await _CategoryService.CreateActivity(description, (int)editProduct.userId);
             return Ok();
         }
+        #endregion
 
+        #region DeleteProduct
         /// <summary>
         /// Soft deletes a particular product.
         /// </summary>
@@ -188,6 +217,10 @@ namespace PMS_API.Controllers
                     return BadRequest();
                 }
                 await _ProductService.DeleteProduct(id);
+                string productName = await _ProductService.ProductName(id);
+                int userId = await _ProductService.ProductUserid(id);
+                string description = activityMessages.deleteProduct.Replace("{1}", productName);
+                await _CategoryService.CreateActivity(description, (int)userId);
                 return Ok();
             }
             catch (Exception ex)
@@ -195,7 +228,9 @@ namespace PMS_API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Failed to delete product: {ex.Message}");
             }
         }
+        #endregion
 
+        #region Delete Product's image
         /// <summary>
         /// Delete Product's Image by product id
         /// </summary>
@@ -210,12 +245,30 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> DeleteProductImage(int id)
         {
-            if (id == 0)
+            if (id <= 0)
             {
                 return BadRequest();
             }
             await _ProductService.DeleteProductImage(id);
             return Ok();
+        }
+        #endregion
+
+        [Authorize]
+        [HttpGet("getallactivity", Name = "GetAllActivityOfuser")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<UserActivity>> GetAllActivityOfuser(int Id)
+        {
+            if (Id <= 0)
+            {
+                return BadRequest();
+            }
+            var activityList = await _ProductService.UserActivityList(Id);
+            return Ok(activityList);
         }
     }
 }

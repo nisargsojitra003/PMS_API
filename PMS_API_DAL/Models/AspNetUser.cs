@@ -26,4 +26,7 @@ public partial class AspNetUser
 
     [InverseProperty("User")]
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<UserActivity> UserActivities { get; set; } = new List<UserActivity>();
 }

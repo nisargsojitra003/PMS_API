@@ -9,7 +9,7 @@ using PMS_API_DAL.DataContext;
 using PMS_API_DAL.Models.CustomeModel;
 using System.Text;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
@@ -17,15 +17,16 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("PMS_API_Connection_String")));
-builder.Services.AddScoped<IProduct , ProductService>();
+builder.Services.AddScoped<IProduct, ProductService>();
 builder.Services.AddScoped<ICategory, CategoryService>();
 builder.Services.AddScoped<IJwt, JwtServices>();
-builder.Services.AddScoped<ILogin , LoginService>();
+builder.Services.AddScoped<ILogin, LoginService>();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSingleton<ExceptionMiddleware>();
+//builder.Services.AddSingleton<ExceptionMiddleware>();
+builder.Services.AddScoped<ActivityMessages>();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme 
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
                       "Enter 'Bearer' [Space] and than token in the text below. \r\n\r\n" +
@@ -34,7 +35,7 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Scheme = "Bearer"
     });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement() 
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
         {
             new OpenApiSecurityScheme()
@@ -49,7 +50,7 @@ builder.Services.AddSwaggerGen(options =>
                 In = ParameterLocation.Header
             },
             new List<string>()
-        }   
+        }
     });
 });
 
@@ -71,9 +72,9 @@ builder.Services.AddAuthentication(x =>
             ValidateIssuer = false,
             ValidateAudience = false
         };
-    }); 
+    });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -91,7 +92,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.ConfigureExceptionMiddleware();
+//app.ConfigureExceptionMiddleware();
 //app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
 

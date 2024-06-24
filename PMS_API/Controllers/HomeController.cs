@@ -15,6 +15,7 @@ namespace PMS_API.Controllers
             _ProductService = product;
         }
 
+        #region GetCategoryandproduct Counts
         /// <summary>
         /// Get Counts of user's TotalCategory and TotalProduct
         /// </summary>
@@ -33,8 +34,9 @@ namespace PMS_API.Controllers
             {
                 return BadRequest();
             }
-            var counts = await _ProductService.totalCount(id);
+            TotalCount counts = await _ProductService.totalCount(id);
             return Ok(counts);
         }
+        #endregion
     }
 }

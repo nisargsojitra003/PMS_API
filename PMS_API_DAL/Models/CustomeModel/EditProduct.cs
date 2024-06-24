@@ -7,7 +7,6 @@ namespace PMS_API_DAL.Models.CustomeModel
     {
         public List<CategoryList>? categories { get; set; }
         public List<Category>? CategoryList {  get; set; }
-        //public List<EditProduct> editProducts { get; set; }
         public int ProductId { get; set; }
 
         [Required(ErrorMessage = "ProductName is required")]
@@ -17,13 +16,11 @@ namespace PMS_API_DAL.Models.CustomeModel
 
         [Required(ErrorMessage = "Category is required")]
         public int CategoryId { get; set; }
-        //public DateTime CreatedDate { get; set; }
         public DateTime? ModiFiedDate { get; set; }
 
         [Required(ErrorMessage = "Categorytag is required")]
         public string? CategoryTag { get; set; }
         public string? CategoryName { get; set; }
-        //public IFormFile? Fileupload { get; set; }
         public string? FileName { get; set; }
 
         [Required(ErrorMessage = "Description is required")]

@@ -171,7 +171,7 @@ namespace PMS_API_BAL.Services
 
         public async Task EditProduct(int id, CategoryDTO category)
         {
-            var mainCategory = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == id);
+            Category? mainCategory = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == id);
 
             if (mainCategory != null)
             {
@@ -209,5 +209,32 @@ namespace PMS_API_BAL.Services
                 await dbcontext.SaveChangesAsync();
             }
         }
+
+        public async Task<string> CategotyName(int categoryId)
+        {
+            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+            string name = category.Name;
+            return name;
+        }
+
+        public async Task<int> CategotyUserid(int categoryId)
+        {
+            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+            int userId = (int)category.UserId;
+            return userId;
+        }
+
+
+        public async Task CreateActivity(string description , int userId)
+        {
+            UserActivity userActivity = new UserActivity()
+            {
+                CreatedAt = DateTime.UtcNow,
+                Description = description,
+                UserId = userId,
+            };
+            await dbcontext.AddAsync(userActivity);
+            await dbcontext.SaveChangesAsync();
+            }
     }
 }

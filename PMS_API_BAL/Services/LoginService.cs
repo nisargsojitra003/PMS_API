@@ -10,9 +10,13 @@ namespace PMS_API_BAL.Services
     public class LoginService : ILogin
     {
         private readonly ApplicationDbContext dbcontext;
-        public LoginService(ApplicationDbContext context)
+        private readonly ICategory _CategoryService;
+        private readonly ActivityMessages activityMessages;
+        public LoginService(ApplicationDbContext context, ICategory categoryService, ActivityMessages _activityMessages)
         {
             dbcontext = context;
+            _CategoryService = categoryService;
+            activityMessages = _activityMessages;
         }
         public async Task<AspNetUser> LoginUser(Login login)
         {
@@ -34,7 +38,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckEmailInDb(string email)
         {
-            var user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(i => i.Email == email);
+            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(i => i.Email == email);
             if (user == null)
             {
                 return true;
@@ -56,8 +60,22 @@ namespace PMS_API_BAL.Services
                 Role = "User",
                 CreatedAt = DateTime.UtcNow,
             };
+
             await dbcontext.AspNetUsers.AddAsync(aspNetUser);
             await dbcontext.SaveChangesAsync();
+
+            //UserActivity userActivity = new UserActivity()
+            //{
+            //    CreatedAt = DateTime.UtcNow,
+            //    Description = $"Account has been created using Email : {createUser.Email}",
+            //    UserId = aspNetUser.Id,
+            //};
+
+            //await dbcontext.UserActivities.AddAsync(userActivity);
+            //await dbcontext.SaveChangesAsync();
+            string description = activityMessages.addCategory.Replace("{1}", createUser.Email);
+            await _CategoryService.CreateActivity(description, aspNetUser.Id);
+
         }
 
         public static string SetHashPassword(string password)

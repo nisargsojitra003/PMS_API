@@ -1,4 +1,5 @@
-﻿using PMS_API_DAL.Models.CustomeModel;
+﻿using PMS_API_DAL.Models;
+using PMS_API_DAL.Models.CustomeModel;
 
 namespace PMS_API_BAL.Interfaces
 {
@@ -6,7 +7,7 @@ namespace PMS_API_BAL.Interfaces
     {
         public Task<PagedList<AddProduct>> ProductList(int pageNumber, int pageSize, SearchFilter searchFilter);
         public Task<int> TotalProducts(SearchFilter searchFilter);
-        public Task<EditProduct> GetProduct(int id , int userId);
+        public Task<EditProduct> GetProduct(int id, int userId);
         public Task AddProductInDb(AddProductDTO addProduct);
         public Task EditProduct(int productId, EditProductDTO editProduct);
         public Task DeleteProduct(int productId);
@@ -17,5 +18,8 @@ namespace PMS_API_BAL.Interfaces
         public Task<bool> CheckProductNameExist(string productName, int categoryId, int userId);
         public Task DeleteProductImage(int productId);
         public Task<TotalCount> totalCount(int userId);
+        public Task<string> ProductName(int productId);
+        public Task<int> ProductUserid(int productId);
+        public Task<List<UserActivity>> UserActivityList(int userId);
     }
 }

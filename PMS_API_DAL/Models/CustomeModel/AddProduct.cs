@@ -23,7 +23,7 @@ namespace PMS_API_DAL.Models.CustomeModel
         [Required(ErrorMessage = "Categorytag is required")]
         public string? CategoryTag { get; set; }
         public string? CategoryName { get; set; }
-        //[Required(ErrorMessage = "File is required")]
+
         public IFormFile? Fileupload { get; set; }
 
         [Required(ErrorMessage = "Description is required")]

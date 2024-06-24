@@ -11,11 +11,14 @@ namespace PMS_API.Controllers
     public class CategoryController : ControllerBase
     {
         private readonly ICategory _CategoryService;
-        public CategoryController(ICategory category)
+        private readonly ActivityMessages activityMessages;
+        public CategoryController(ICategory category,ActivityMessages _activityMessages)
         {
             _CategoryService = category;
+            activityMessages = _activityMessages;
         }
 
+        #region GetAllCategories
         /// <summary>
         /// Get all category list.
         /// </summary>
@@ -42,7 +45,9 @@ namespace PMS_API.Controllers
 
             return Ok(response);
         }
+        #endregion
 
+        #region GetCategoryById
         /// <summary>
         /// Gets the details of a category by its ID.
         /// </summary>
@@ -57,18 +62,27 @@ namespace PMS_API.Controllers
         [HttpGet("getcategory/{id:int}", Name = "GetCategory")]
         public async Task<ActionResult<Category>> GetCategory(int id)
         {
-            if (id <= 0)
+            try
             {
-                return BadRequest("Invalid category ID.");
+                if (id <= 0)
+                {
+                    return BadRequest("Invalid category ID.");
+                }
+                Category category = await _CategoryService.GetCategoryById(id);
+                if (category == null)
+                {
+                    return NotFound("Category not found.");
+                }
+                return Ok(category);
             }
-            Category category = await _CategoryService.GetCategoryById(id);
-            if (category == null)
+            catch (Exception ex)
             {
-                return NotFound("Category not found.");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Failed to get category: {ex.Message}");
             }
-            return Ok(category);
         }
+        #endregion
 
+        #region CategoryPostmethod
         /// <summary>
         /// Create category method.
         /// </summary>
@@ -96,9 +110,13 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
             await _CategoryService.AddCategoryInDb(addCategory);
+            string description = activityMessages.addCategory.Replace("{1}", addCategory.Name);
+            await _CategoryService.CreateActivity(description,(int)addCategory.UserId);
             return Ok();
         }
+        #endregion
 
+        #region CategoryUpdatePutMethod
         /// <summary>
         /// Updates an existing category.
         /// </summary>
@@ -123,9 +141,13 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
             await _CategoryService.EditProduct(id, category);
+            string description = activityMessages.editCategory.Replace("{1}", category.Name);
+            await _CategoryService.CreateActivity(description, (int)category.UserId);
             return Ok();
         }
+        #endregion
 
+        #region DeleteCategory
         /// <summary>
         /// Soft deletes a particular category.
         /// </summary>
@@ -145,7 +167,23 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
             await _CategoryService.DeleteCategory(id);
+            string categoryName = await _CategoryService.CategotyName(id);
+            int userid = await _CategoryService.CategotyUserid(id);
+            string description = activityMessages.deleteCategory.Replace("{1}", categoryName);
+            await _CategoryService.CreateActivity(description, userid);
             return Ok();
+        }
+        #endregion
+
+        [HttpPost("myactivity", Name = "CreateActivity")]
+        public async Task<IActionResult> CreateActivity(string discription,int userId)
+        {
+            if(discription != null && userId > 0)
+            {
+                await _CategoryService.CreateActivity(discription, userId);
+                return Ok();
+            }
+            return BadRequest();
         }
     }
 }
