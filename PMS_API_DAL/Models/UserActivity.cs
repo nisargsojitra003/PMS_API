@@ -9,6 +9,7 @@ public partial class UserActivity
     [Key]
     public int Id { get; set; }
 
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime CreatedAt { get; set; }
 
     [StringLength(150)]

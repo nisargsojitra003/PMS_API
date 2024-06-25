@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PMS_API_DAL.Models.CustomeModel
+﻿namespace PMS_API_DAL.Models.CustomeModel
 {
 
     public class PagedList<T> : List<T>

@@ -109,10 +109,10 @@ namespace PMS_API_BAL.Services
             return new PagedList<Category>(categoryList, totalCount, pageNumber, pageSize);
         }
 
-        public async Task<int> totalCount(SearchFilter searchFilter)
+        public async Task<int> totalCount(int userId)
         {
             int totalCount = await dbcontext.Categories
-                            .Where(c => (c.DeletedAt == null && (c.UserId == searchFilter.userId || (c.UserId == null && c.IsSystem == true))))
+                            .Where(c => (c.DeletedAt == null && (c.UserId == userId || (c.UserId == null && c.IsSystem == true))))
                             .OrderByDescending(c => c.IsSystem == true).ThenBy(c => c.Id)
                             .CountAsync();
             return totalCount;
@@ -225,16 +225,16 @@ namespace PMS_API_BAL.Services
         }
 
 
-        public async Task CreateActivity(string description , int userId)
+        public async Task CreateActivity(string description, int userId)
         {
             UserActivity userActivity = new UserActivity()
             {
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
                 Description = description,
                 UserId = userId,
             };
             await dbcontext.AddAsync(userActivity);
             await dbcontext.SaveChangesAsync();
-            }
+        }
     }
 }

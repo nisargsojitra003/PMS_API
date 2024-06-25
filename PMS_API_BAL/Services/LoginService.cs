@@ -25,7 +25,7 @@ namespace PMS_API_BAL.Services
 
             if (user != null)
             {
-                // Validate password
+                // Validate password is correct or not?
                 bool isPasswordValid = GetHashPassword(user.Password, login.Password);
                 if (!isPasswordValid)
                 {
@@ -63,19 +63,9 @@ namespace PMS_API_BAL.Services
 
             await dbcontext.AspNetUsers.AddAsync(aspNetUser);
             await dbcontext.SaveChangesAsync();
-
-            //UserActivity userActivity = new UserActivity()
-            //{
-            //    CreatedAt = DateTime.UtcNow,
-            //    Description = $"Account has been created using Email : {createUser.Email}",
-            //    UserId = aspNetUser.Id,
-            //};
-
-            //await dbcontext.UserActivities.AddAsync(userActivity);
-            //await dbcontext.SaveChangesAsync();
-            string description = activityMessages.addCategory.Replace("{1}", createUser.Email);
+            //Add entry in useractivity for create account successfully.
+            string description = activityMessages.createAccountRecord.Replace("{1}", createUser.Email);
             await _CategoryService.CreateActivity(description, aspNetUser.Id);
-
         }
 
         public static string SetHashPassword(string password)

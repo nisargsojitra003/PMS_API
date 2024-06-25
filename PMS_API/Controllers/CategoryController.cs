@@ -12,7 +12,7 @@ namespace PMS_API.Controllers
     {
         private readonly ICategory _CategoryService;
         private readonly ActivityMessages activityMessages;
-        public CategoryController(ICategory category,ActivityMessages _activityMessages)
+        public CategoryController(ICategory category, ActivityMessages _activityMessages)
         {
             _CategoryService = category;
             activityMessages = _activityMessages;
@@ -31,9 +31,10 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ResponseCache(Duration = 15)]
         public async Task<ActionResult<PagedList<Category>>> GetAllCategories([FromQuery] SearchFilter searchFilter)
         {
-            int totalCount = await _CategoryService.totalCount(searchFilter);
+            int totalCount = await _CategoryService.totalCount((int)searchFilter.userId);
             string pageNumber = searchFilter.categoryPageNumber ?? "1";
             string pageSize = searchFilter.categoryPageSize ?? "5";
             PagedList<Category> allCategoties = await _CategoryService.CategoryList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
@@ -111,7 +112,7 @@ namespace PMS_API.Controllers
             }
             await _CategoryService.AddCategoryInDb(addCategory);
             string description = activityMessages.addCategory.Replace("{1}", addCategory.Name);
-            await _CategoryService.CreateActivity(description,(int)addCategory.UserId);
+            await _CategoryService.CreateActivity(description, (int)addCategory.UserId);
             return Ok();
         }
         #endregion
@@ -174,16 +175,5 @@ namespace PMS_API.Controllers
             return Ok();
         }
         #endregion
-
-        [HttpPost("myactivity", Name = "CreateActivity")]
-        public async Task<IActionResult> CreateActivity(string discription,int userId)
-        {
-            if(discription != null && userId > 0)
-            {
-                await _CategoryService.CreateActivity(discription, userId);
-                return Ok();
-            }
-            return BadRequest();
-        }
     }
 }

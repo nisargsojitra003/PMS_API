@@ -36,9 +36,10 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ResponseCache(Duration = 15)]
         public async Task<ActionResult<PagedList<AddProduct>>> GetAllProducts([FromQuery] SearchFilter searchFilter)
         {
-            int totalProducts = await _ProductService.TotalProducts(searchFilter);
+            int totalProducts = await _ProductService.TotalProducts((int)searchFilter.userId);
             string pageNumber = searchFilter.productPageNumber ?? "1";
             string pageSize = searchFilter.productPageSize ?? "5";
             PagedList<AddProduct> getAllProducts = await _ProductService.ProductList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
@@ -47,6 +48,41 @@ namespace PMS_API.Controllers
                 TotalProducts = totalProducts,
                 productList = getAllProducts
             };
+            return Ok(response);
+        }
+        #endregion
+
+        #region UserActivity
+        /// <summary>
+        /// Get all user's Activity.
+        /// </summary>
+        /// <param name="Id">userId</param>
+        /// <returns>user's all activity list</returns>
+        [Authorize]
+        [HttpGet("getallactivity", Name = "GetAllActivityOfuser")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [Consumes("multipart/form-data")]
+        [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
+        public async Task<ActionResult<PagedList<UserActivity>>> GetAllActivityOfuser([FromQuery] SearchFilter searchFilter)
+        {
+            if (searchFilter.userId <= 0)
+            {
+                return BadRequest();
+            }
+            int totalActivities = await _ProductService.TotalActivities((int)searchFilter.userId);
+            string pageNumber = searchFilter.activityPageNumber ?? "1";
+            string pageSize = searchFilter.activityPageSize ?? "5";
+            PagedList<UserActivity> activityList = await _ProductService.UserActivityList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
+            var response = new 
+            {
+                TotalActivities = totalActivities,
+                ActivityList = activityList
+            };
+
             return Ok(response);
         }
         #endregion
@@ -253,22 +289,5 @@ namespace PMS_API.Controllers
             return Ok();
         }
         #endregion
-
-        [Authorize]
-        [HttpGet("getallactivity", Name = "GetAllActivityOfuser")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<UserActivity>> GetAllActivityOfuser(int Id)
-        {
-            if (Id <= 0)
-            {
-                return BadRequest();
-            }
-            var activityList = await _ProductService.UserActivityList(Id);
-            return Ok(activityList);
-        }
     }
 }

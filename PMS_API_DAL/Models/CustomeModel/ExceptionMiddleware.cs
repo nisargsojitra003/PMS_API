@@ -47,7 +47,7 @@ namespace PMS_API_DAL.Models.CustomeModel
                     break;
             }
 
-            var errorResponse = new ErrorResponse()
+            ErrorResponse errorResponse = new ErrorResponse()
             {
                 StatusCode = statusCode,
                 Message = ex.Message

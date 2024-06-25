@@ -12,25 +12,35 @@ using System.Text;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Add DbContext with PostgreSQL connection
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseNpgsql(builder.Configuration.GetConnectionString("PMS_API_Connection_String")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PMS_API_Connection_String")));
+
+// Add services to the DI container
 builder.Services.AddScoped<IProduct, ProductService>();
 builder.Services.AddScoped<ICategory, CategoryService>();
 builder.Services.AddScoped<IJwt, JwtServices>();
 builder.Services.AddScoped<ILogin, LoginService>();
-builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSingleton<ExceptionMiddleware>();
 builder.Services.AddScoped<ActivityMessages>();
+
+// Configure response caching
+builder.Services.AddResponseCaching(options =>
+{
+    options.MaximumBodySize = 1024;
+    options.UseCaseSensitivePaths = true;
+});
+
+// Configure Swagger
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
-                      "Enter 'Bearer' [Space] and than token in the text below. \r\n\r\n" +
-                      "Example: \"Bearer 12345efrR\"",
+                      "Enter 'Bearer' [Space] and then your token in the text input below. \r\n\r\n" +
+                      "Example: \"Bearer 12345abcdef\"",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Scheme = "Bearer"
@@ -38,13 +48,13 @@ builder.Services.AddSwaggerGen(options =>
     options.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
         {
-            new OpenApiSecurityScheme()
+            new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference()
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            },
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
                 Scheme = "oauth2",
                 Name = "Bearer",
                 In = ParameterLocation.Header
@@ -54,32 +64,32 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-string? key = builder.Configuration.GetValue<string>("Jwt:Key");
+// JWT Authentication
+string key = builder.Configuration.GetValue<string>("Jwt:Key");
 
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-    .AddJwtBearer(x =>
+.AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
     {
-        x.RequireHttpsMetadata = false;
-        x.SaveToken = true;
-        x.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-            ValidateIssuer = false,
-            ValidateAudience = false
-        };
-    });
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
 
 WebApplication app = builder.Build();
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-            Path.Combine(Directory.GetCurrentDirectory(), "UploadDocuments")),
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "UploadDocuments")),
     RequestPath = "/UploadDocuments"
 });
 
@@ -89,11 +99,27 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Middleware order is important
 app.UseHttpsRedirection();
+app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
-//app.ConfigureExceptionMiddleware();
-//app.UseMiddleware<ExceptionMiddleware>();
-app.MapControllers();
 
+// Custom response caching middleware
+app.Use(async (context, next) =>
+{
+    context.Response.GetTypedHeaders().CacheControl =
+        new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
+        {
+            Public = true,
+            MaxAge = TimeSpan.FromSeconds(30)
+        };
+    context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] =
+        new string[] { "Accept-Encoding" };
+
+    await next();
+});
+
+app.MapControllers();
 app.Run();

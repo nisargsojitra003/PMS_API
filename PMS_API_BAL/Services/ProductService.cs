@@ -3,6 +3,7 @@ using PMS_API_BAL.Interfaces;
 using PMS_API_DAL.DataContext;
 using PMS_API_DAL.Models;
 using PMS_API_DAL.Models.CustomeModel;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace PMS_API_BAL.Services
 {
@@ -130,16 +131,63 @@ namespace PMS_API_BAL.Services
             return new PagedList<AddProduct>(productsList, totalCount, pageNumber, pageSize);
         }
 
-        public async Task<List<UserActivity>> UserActivityList(int userId)
+        public async Task<PagedList<UserActivity>> UserActivityList(int pageNumber, int pageSize, SearchFilter searchFilter)
         {
-            var activityList = await dbcontext.UserActivities.Where(u => u.UserId == userId).OrderByDescending(u => u.CreatedAt).ToListAsync();
-            return activityList;
+            IQueryable<UserActivity> activityList = dbcontext.UserActivities
+                .Where(u => u.UserId == searchFilter.userId)
+                .OrderByDescending(u => u.CreatedAt)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchFilter.searchActivity))
+            {
+                activityList = activityList.Where(c => c.Description.ToLower().Trim().Contains(searchFilter.searchActivity.ToLower()));
+                pageNumber = 1;
+            }
+            if (activityList.Count() >= 2)
+            {
+                switch (searchFilter.sortTypeActivity)
+                {
+                    case 1:
+                        activityList = activityList.OrderBy(c => c.CreatedAt);
+                        break;
+                    case 2:
+                        activityList = activityList.OrderByDescending(c => c.CreatedAt);
+                        break;
+                    case 3:
+                        activityList = activityList.OrderBy(c => c.Description);
+                        break;
+                    case 4:
+                        activityList = activityList.OrderByDescending(c => c.Description);
+                        break;
+                    default:
+                        activityList = activityList.AsQueryable();
+                        break;
+                }
+            }
+            int totalCount = activityList.Count();
+
+            List<UserActivity> activityMainList = await activityList
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new UserActivity
+                {
+                    Id = p.Id,
+                    Description = p.Description,
+                    CreatedAt = p.CreatedAt,
+                })
+                .ToListAsync();
+            return new PagedList<UserActivity>(activityMainList, totalCount, pageNumber, pageSize);
         }
 
-        public async Task<int> TotalProducts(SearchFilter searchFilter)
+        public async Task<int> TotalActivities(int userId)
         {
-            int totalProducts = await dbcontext.Products.Where(p => p.DeletedAt == null && p.UserId == searchFilter.userId).CountAsync();
+            int totalActivities = await dbcontext.UserActivities.Where(u => u.UserId == userId).CountAsync();
+            return totalActivities;
+        }
 
+        public async Task<int> TotalProducts(int userId)
+        {
+            int totalProducts = await dbcontext.Products.Where(p => p.DeletedAt == null && p.UserId == userId).CountAsync();
             return totalProducts;
         }
 

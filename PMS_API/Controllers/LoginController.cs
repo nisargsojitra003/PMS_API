@@ -48,12 +48,12 @@ namespace PMS_API.Controllers
                 switch (user.Role)
                 {
                     case "Admin":
-                        actionName = "Index";
-                        controllerName = "Home";
+                        actionName = "index";
+                        controllerName = "home";
                         break;
                     case "User":
-                        actionName = "Index";
-                        controllerName = "Home";
+                        actionName = "index";
+                        controllerName = "home";
                         break;
                 }
                 var response = new

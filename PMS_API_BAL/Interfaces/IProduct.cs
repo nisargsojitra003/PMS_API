@@ -6,7 +6,7 @@ namespace PMS_API_BAL.Interfaces
     public interface IProduct
     {
         public Task<PagedList<AddProduct>> ProductList(int pageNumber, int pageSize, SearchFilter searchFilter);
-        public Task<int> TotalProducts(SearchFilter searchFilter);
+        public Task<int> TotalProducts(int userId);
         public Task<EditProduct> GetProduct(int id, int userId);
         public Task AddProductInDb(AddProductDTO addProduct);
         public Task EditProduct(int productId, EditProductDTO editProduct);
@@ -20,6 +20,7 @@ namespace PMS_API_BAL.Interfaces
         public Task<TotalCount> totalCount(int userId);
         public Task<string> ProductName(int productId);
         public Task<int> ProductUserid(int productId);
-        public Task<List<UserActivity>> UserActivityList(int userId);
+        public Task<PagedList<UserActivity>> UserActivityList(int pageNumber, int pageSize, SearchFilter searchFilter);
+        public Task<int> TotalActivities(int userId);
     }
 }

@@ -2,7 +2,7 @@
 {
     public class ActivityMessages
     {
-        public string loginRecord = "Account has been created using Email : {1}";
+        public string createAccountRecord = "Account has been created using Email : {1}";
         public string addCategory = "{1} category has been created";
         public string editCategory = "{1} category has been updated";
         public string deleteCategory = "{1} category has been deleted";
