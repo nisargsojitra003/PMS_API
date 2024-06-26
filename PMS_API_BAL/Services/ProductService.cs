@@ -3,7 +3,6 @@ using PMS_API_BAL.Interfaces;
 using PMS_API_DAL.DataContext;
 using PMS_API_DAL.Models;
 using PMS_API_DAL.Models.CustomeModel;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace PMS_API_BAL.Services
 {
@@ -106,7 +105,7 @@ namespace PMS_API_BAL.Services
                         break;
                     default:
                         break;
-                }   
+                }
             }
 
             int totalCount = query.Count();
@@ -316,7 +315,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProductNameExist(string productName, int categoryId, int userId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Name.ToLower() == productName.ToLower() && c.CategoryId == categoryId && c.UserId == userId);
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Name.ToLower() == productName.ToLower() && p.CategoryId == categoryId && p.UserId == userId);
             return product != null;
         }
 
@@ -403,14 +402,14 @@ namespace PMS_API_BAL.Services
 
         public async Task<string> ProductName(int productId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Id == productId);
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
             string name = product.Name;
             return name;
         }
 
         public async Task<int> ProductUserid(int productId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Id == productId);
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
             int userId = (int)product.UserId;
             return userId;
         }
@@ -426,10 +425,10 @@ namespace PMS_API_BAL.Services
             }
         }
 
-        public async Task<TotalCount> totalCount(int userId)
+        public async Task<TotalCount> TotalCount(int userId)
         {
             List<Category> categoryList = await dbcontext.Categories
-               .Where(c => (c.DeletedAt == null && (c.UserId == userId || (c.UserId == null && c.IsSystem == true))))
+               .Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true)))
                .OrderBy(c => c.Id)
                .ToListAsync();
             TotalCount totalCount = new TotalCount()
@@ -438,6 +437,27 @@ namespace PMS_API_BAL.Services
                 totalProducts = await dbcontext.Products.Where(p => (p.DeletedAt == null && p.UserId == userId)).CountAsync()
             };
             return totalCount;
+        }
+
+        public async Task<bool> CheckProduct(int productId)
+        {
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Id == productId);
+            return product != null ? true : false;
+        }
+
+        public async Task<bool> CheckUsersProduct(int productId, int userId)
+        {
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Id == productId);
+            int? productUserid = product.UserId;
+
+            if (productUserid != userId)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
     }

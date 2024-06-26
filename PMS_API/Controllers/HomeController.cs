@@ -30,11 +30,11 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<TotalCount>> Index(int id)
         {
-            if (id == 0)
+            if (id <= 0)
             {
                 return BadRequest();
             }
-            TotalCount counts = await _ProductService.totalCount(id);
+            TotalCount counts = await _ProductService.TotalCount(id);
             return Ok(counts);
         }
         #endregion

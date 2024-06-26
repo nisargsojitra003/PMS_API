@@ -56,8 +56,8 @@ namespace PMS_API.Controllers
         /// <summary>
         /// Get all user's Activity.
         /// </summary>
-        /// <param name="Id">userId</param>
-        /// <returns>user's all activity list</returns>
+        /// <param name="searchFilter"></param>
+        /// <returns>all activity of logged in user</returns>
         [Authorize]
         [HttpGet("getallactivity", Name = "GetAllActivityOfuser")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -77,7 +77,7 @@ namespace PMS_API.Controllers
             string pageNumber = searchFilter.activityPageNumber ?? "1";
             string pageSize = searchFilter.activityPageSize ?? "5";
             PagedList<UserActivity> activityList = await _ProductService.UserActivityList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
-            var response = new 
+            var response = new
             {
                 TotalActivities = totalActivities,
                 ActivityList = activityList
@@ -112,7 +112,7 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
             await _ProductService.AddProductInDb(product);
-            string description = activityMessages.addProduct.Replace("{1}", product.ProductName);
+            string description = activityMessages.add.Replace("{1}", product.ProductName).Replace("{2}", TypeOfItem.product.ToString());
             await _CategoryService.CreateActivity(description, (int)product.userId);
             return Ok();
         }
@@ -183,6 +183,14 @@ namespace PMS_API.Controllers
         {
             try
             {
+                if (!await _ProductService.CheckProduct(id))
+                {
+                    return NotFound();
+                }
+                if (await _ProductService.CheckUsersProduct(id, userId))
+                {
+                    return NotFound();
+                }
                 EditProduct product = await _ProductService.GetProduct(id, userId);
                 if (product == null)
                 {
@@ -225,7 +233,7 @@ namespace PMS_API.Controllers
             }
 
             await _ProductService.EditProduct(id, editProduct);
-            string description = activityMessages.editProduct.Replace("{1}", editProduct.ProductName);
+            string description = activityMessages.edit.Replace("{1}", editProduct.ProductName).Replace("{2}", TypeOfItem.product.ToString());
             await _CategoryService.CreateActivity(description, (int)editProduct.userId);
             return Ok();
         }
@@ -255,7 +263,7 @@ namespace PMS_API.Controllers
                 await _ProductService.DeleteProduct(id);
                 string productName = await _ProductService.ProductName(id);
                 int userId = await _ProductService.ProductUserid(id);
-                string description = activityMessages.deleteProduct.Replace("{1}", productName);
+                string description = activityMessages.delete.Replace("{1}", productName).Replace("{2}", TypeOfItem.product.ToString());
                 await _CategoryService.CreateActivity(description, (int)userId);
                 return Ok();
             }

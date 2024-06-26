@@ -27,7 +27,7 @@ namespace PMS_API_BAL.Services
             {
                 // Validate password is correct or not?
                 bool isPasswordValid = GetHashPassword(user.Password, login.Password);
-                if (!isPasswordValid)
+                if (!GetHashPassword(user.Password, login.Password))
                 {
                     return null;
                 }

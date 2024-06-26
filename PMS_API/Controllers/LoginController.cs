@@ -38,10 +38,11 @@ namespace PMS_API.Controllers
             }
 
             AspNetUser user = await _LoginService.LoginUser(userInfo);
+
             if (user != null)
             {
                 string jwtToken = _JwtService.GenerateToken(user);
-                Response.Cookies.Append("jwt", jwtToken);
+                //Response.Cookies.Append("jwt", jwtToken);
 
                 string actionName = "";
                 string controllerName = "";
@@ -56,6 +57,7 @@ namespace PMS_API.Controllers
                         controllerName = "home";
                         break;
                 }
+
                 var response = new
                 {
                     Action = actionName,

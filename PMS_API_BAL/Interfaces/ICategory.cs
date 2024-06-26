@@ -6,7 +6,7 @@ namespace PMS_API_BAL.Interfaces
     public interface ICategory
     {
         public Task<PagedList<Category>> CategoryList(int pageNumber, int pageSize, SearchFilter searchFilter);
-        public Task<int> totalCount(int userId);
+        public Task<int> TotalCount(int userId);
         public Task AddCategoryInDb(CategoryDTO addCategory);
         public Task<bool> CheckCategoryNameInDb(string categoryName, int userId);
         public Task<bool> CheckCategoryCodeInDb(string categoryCode, int userId);
@@ -16,7 +16,9 @@ namespace PMS_API_BAL.Interfaces
         public Task<bool> CategoryCount(int categoryId);
         public Task DeleteCategory(int categoryId);
         public Task CreateActivity(string description, int userId);
-        public  Task<string> CategotyName(int categoryId);
+        public Task<string> CategotyName(int categoryId);
         public Task<int> CategotyUserid(int categoryId);
+        public Task<bool> CheckCategory(int categoryId);
+        public Task<bool> CheckUsersCategory(int categoryId, int userId);
     }
 }

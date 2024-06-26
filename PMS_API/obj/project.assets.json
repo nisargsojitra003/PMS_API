@@ -2575,11 +2575,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\pca103\\Source\\Repos\\PMS_API\\PMS_API\\PMS_API.csproj",
+      "projectUniqueName": "C:\\Users\\pca103\\source\\repos\\PMS_API\\PMS_API\\PMS_API.csproj",
       "projectName": "PMS_API",
-      "projectPath": "C:\\Users\\pca103\\Source\\Repos\\PMS_API\\PMS_API\\PMS_API.csproj",
+      "projectPath": "C:\\Users\\pca103\\source\\repos\\PMS_API\\PMS_API\\PMS_API.csproj",
       "packagesPath": "C:\\Users\\pca103\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\pca103\\Source\\Repos\\PMS_API\\PMS_API\\obj\\",
+      "outputPath": "C:\\Users\\pca103\\source\\repos\\PMS_API\\PMS_API\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\pca103\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -2596,11 +2596,11 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "C:\\Users\\pca103\\Source\\Repos\\PMS_API\\PMS_API_BAL\\PMS_API_BAL.csproj": {
-              "projectPath": "C:\\Users\\pca103\\Source\\Repos\\PMS_API\\PMS_API_BAL\\PMS_API_BAL.csproj"
+            "C:\\Users\\pca103\\source\\repos\\PMS_API\\PMS_API_BAL\\PMS_API_BAL.csproj": {
+              "projectPath": "C:\\Users\\pca103\\source\\repos\\PMS_API\\PMS_API_BAL\\PMS_API_BAL.csproj"
             },
-            "C:\\Users\\pca103\\Source\\Repos\\PMS_API\\PMS_API_DAL\\PMS_API_DAL.csproj": {
-              "projectPath": "C:\\Users\\pca103\\Source\\Repos\\PMS_API\\PMS_API_DAL\\PMS_API_DAL.csproj"
+            "C:\\Users\\pca103\\source\\repos\\PMS_API\\PMS_API_DAL\\PMS_API_DAL.csproj": {
+              "projectPath": "C:\\Users\\pca103\\source\\repos\\PMS_API\\PMS_API_DAL\\PMS_API_DAL.csproj"
             }
           }
         }

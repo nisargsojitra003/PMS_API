@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using PMS_API_BAL.Interfaces;
 using PMS_API_DAL.Models;
 using PMS_API_DAL.Models.CustomeModel;
@@ -34,7 +35,7 @@ namespace PMS_API.Controllers
         [ResponseCache(Duration = 15)]
         public async Task<ActionResult<PagedList<Category>>> GetAllCategories([FromQuery] SearchFilter searchFilter)
         {
-            int totalCount = await _CategoryService.totalCount((int)searchFilter.userId);
+            int totalCount = await _CategoryService.TotalCount((int)searchFilter.userId);
             string pageNumber = searchFilter.categoryPageNumber ?? "1";
             string pageSize = searchFilter.categoryPageSize ?? "5";
             PagedList<Category> allCategoties = await _CategoryService.CategoryList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
@@ -61,13 +62,21 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpGet("getcategory/{id:int}", Name = "GetCategory")]
-        public async Task<ActionResult<Category>> GetCategory(int id)
+        public async Task<ActionResult<Category>> GetCategory(int id,int userId)
         {
             try
             {
                 if (id <= 0)
                 {
                     return BadRequest("Invalid category ID.");
+                }
+                if(! await _CategoryService.CheckCategory(id))
+                {
+                    return NotFound();
+                }
+                if(await _CategoryService.CheckUsersCategory(id, userId))
+                {
+                    return NotFound();
                 }
                 Category category = await _CategoryService.GetCategoryById(id);
                 if (category == null)
@@ -111,7 +120,7 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
             await _CategoryService.AddCategoryInDb(addCategory);
-            string description = activityMessages.addCategory.Replace("{1}", addCategory.Name);
+            string description = activityMessages.add.Replace("{1}", addCategory.Name).Replace("{2}", TypeOfItem.category.ToString());
             await _CategoryService.CreateActivity(description, (int)addCategory.UserId);
             return Ok();
         }
@@ -142,7 +151,7 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
             await _CategoryService.EditProduct(id, category);
-            string description = activityMessages.editCategory.Replace("{1}", category.Name);
+            string description = activityMessages.edit.Replace("{1}", category.Name).Replace("{2}", TypeOfItem.category.ToString());
             await _CategoryService.CreateActivity(description, (int)category.UserId);
             return Ok();
         }
@@ -170,7 +179,7 @@ namespace PMS_API.Controllers
             await _CategoryService.DeleteCategory(id);
             string categoryName = await _CategoryService.CategotyName(id);
             int userid = await _CategoryService.CategotyUserid(id);
-            string description = activityMessages.deleteCategory.Replace("{1}", categoryName);
+            string description = activityMessages.delete.Replace("{1}", categoryName).Replace("{2}", TypeOfItem.category.ToString());
             await _CategoryService.CreateActivity(description, userid);
             return Ok();
         }

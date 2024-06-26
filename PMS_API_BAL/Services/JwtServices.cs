@@ -21,7 +21,7 @@ namespace PMS_API_BAL.Services
         public string GenerateToken(AspNetUser user)
         {
             string list = "";
-
+                
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Email, user.Email),
@@ -35,7 +35,7 @@ namespace PMS_API_BAL.Services
             SymmetricSecurityKey key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            DateTime expires = DateTime.UtcNow.AddDays(7);
+            DateTime expires = DateTime.UtcNow.AddDays(1);
 
             JwtSecurityToken token = new JwtSecurityToken(
                 _configuration["Jwt:Issuer"],

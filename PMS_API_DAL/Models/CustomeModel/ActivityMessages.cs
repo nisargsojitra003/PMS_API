@@ -2,12 +2,19 @@
 {
     public class ActivityMessages
     {
+        //createAccount Activity message.
         public string createAccountRecord = "Account has been created using Email : {1}";
-        public string addCategory = "{1} category has been created";
-        public string editCategory = "{1} category has been updated";
-        public string deleteCategory = "{1} category has been deleted";
-        public string addProduct = "{1} Product has been created";
-        public string editProduct = "{1} Product has been updated";
-        public string deleteProduct = "{1} Product has been deleted";
+
+        //Category Activity messages.
+        public string add = "{1} {2} has been created";
+        public string edit = "{1} {2} has been updated";
+        public string delete = "{1} {2} has been deleted";
     }
+
+    public enum TypeOfItem 
+    {
+        category,
+        product
+    }
+
 }

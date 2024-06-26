@@ -109,7 +109,7 @@ namespace PMS_API_BAL.Services
             return new PagedList<Category>(categoryList, totalCount, pageNumber, pageSize);
         }
 
-        public async Task<int> totalCount(int userId)
+        public async Task<int> TotalCount(int userId)
         {
             int totalCount = await dbcontext.Categories
                             .Where(c => (c.DeletedAt == null && (c.UserId == userId || (c.UserId == null && c.IsSystem == true))))
@@ -235,6 +235,27 @@ namespace PMS_API_BAL.Services
             };
             await dbcontext.AddAsync(userActivity);
             await dbcontext.SaveChangesAsync();
+        }
+
+        public async Task<bool> CheckCategory(int categoryId)
+        {
+            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+            return category != null ? true : false;
+        }
+
+        public async Task<bool> CheckUsersCategory(int categoryId, int userId)
+        {
+            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+            int? categoryUserid = category.UserId;
+
+            if (categoryUserid != userId)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
