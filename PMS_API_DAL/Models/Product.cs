@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PMS_API_DAL.Models;
@@ -29,7 +30,8 @@ public partial class Product
     [StringLength(500)]
     public string? Description { get; set; }
 
-    public int? Price { get; set; }
+    [Precision(20, 2)]
+    public decimal? Price { get; set; }
 
     [Column(TypeName = "timestamp without time zone")]
     public DateTime? DeletedAt { get; set; }

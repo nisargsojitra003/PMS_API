@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMS_API_BAL.Interfaces;
-using PMS_API_DAL.Models;
 using PMS_API_DAL.Models.CustomeModel;
 
 namespace PMS_API.Controllers
@@ -37,55 +36,22 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ResponseCache(Duration = 15)]
-        public async Task<ActionResult<PagedList<AddProduct>>> GetAllProducts([FromQuery] SearchFilter searchFilter)
+        public async Task<ActionResult<PagedList<AddProduct>>> List([FromQuery] SearchFilter searchFilter)
         {
             int totalProducts = await _ProductService.TotalProducts((int)searchFilter.userId);
             string pageNumber = searchFilter.productPageNumber ?? "1";
             string pageSize = searchFilter.productPageSize ?? "5";
             PagedList<AddProduct> getAllProducts = await _ProductService.ProductList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
-            var response = new
+            ProductListResponse productListResponse = new ProductListResponse 
             {
-                TotalProducts = totalProducts,
-                productList = getAllProducts
+                TotalRecords = totalProducts,
+                ProductList = getAllProducts
             };
-            return Ok(response);
+            return Ok(productListResponse);
         }
         #endregion
 
-        #region UserActivity
-        /// <summary>
-        /// Get all user's Activity.
-        /// </summary>
-        /// <param name="searchFilter"></param>
-        /// <returns>all activity of logged in user</returns>
-        [Authorize]
-        [HttpGet("getallactivity", Name = "GetAllActivityOfuser")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [Consumes("multipart/form-data")]
-        [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
-        public async Task<ActionResult<PagedList<UserActivity>>> GetAllActivityOfuser([FromQuery] SearchFilter searchFilter)
-        {
-            if (searchFilter.userId <= 0)
-            {
-                return BadRequest();
-            }
-            int totalActivities = await _ProductService.TotalActivities((int)searchFilter.userId);
-            string pageNumber = searchFilter.activityPageNumber ?? "1";
-            string pageSize = searchFilter.activityPageSize ?? "5";
-            PagedList<UserActivity> activityList = await _ProductService.UserActivityList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
-            var response = new
-            {
-                TotalActivities = totalActivities,
-                ActivityList = activityList
-            };
-
-            return Ok(response);
-        }
-        #endregion
+        
 
         #region CreateProduct Post Method
         /// <summary>
@@ -101,7 +67,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Consumes("multipart/form-data")]
-        public async Task<ActionResult> CreateProduct([FromForm] AddProductDTO product)
+        public async Task<ActionResult> Create([FromForm] AddProductDTO product)
         {
             if (product.ProductName == null)
             {
@@ -112,8 +78,11 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
             await _ProductService.AddProductInDb(product);
-            string description = activityMessages.add.Replace("{1}", product.ProductName).Replace("{2}", TypeOfItem.product.ToString());
+
+            string description = activityMessages.add.Replace("{1}", product.ProductName).Replace("{2}", EntityNameEnum.product.ToString());
+
             await _CategoryService.CreateActivity(description, (int)product.userId);
+
             return Ok();
         }
         #endregion
@@ -157,6 +126,7 @@ namespace PMS_API.Controllers
         public async Task<ActionResult> GetEditCategories()
         {
             EditProduct categories = await _ProductService.EditProductView();
+
             if (categories == null)
             {
                 return BadRequest();
@@ -179,7 +149,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<EditProduct>> GetProduct(int id, int userId)
+        public async Task<ActionResult<EditProduct>> Get(int id, int userId)
         {
             try
             {
@@ -220,7 +190,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UpdateProduct(int id, [FromForm] EditProductDTO editProduct)
+        public async Task<IActionResult> Update(int id, [FromForm] EditProductDTO editProduct)
         {
             if (id != editProduct.ProductId)
             {
@@ -233,7 +203,7 @@ namespace PMS_API.Controllers
             }
 
             await _ProductService.EditProduct(id, editProduct);
-            string description = activityMessages.edit.Replace("{1}", editProduct.ProductName).Replace("{2}", TypeOfItem.product.ToString());
+            string description = activityMessages.edit.Replace("{1}", editProduct.ProductName).Replace("{2}", EntityNameEnum.product.ToString());
             await _CategoryService.CreateActivity(description, (int)editProduct.userId);
             return Ok();
         }
@@ -252,7 +222,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> DeleteProduct(int id)
+        public async Task<ActionResult> Delete(int id)
         {
             try
             {
@@ -261,10 +231,14 @@ namespace PMS_API.Controllers
                     return BadRequest();
                 }
                 await _ProductService.DeleteProduct(id);
+
                 string productName = await _ProductService.ProductName(id);
                 int userId = await _ProductService.ProductUserid(id);
-                string description = activityMessages.delete.Replace("{1}", productName).Replace("{2}", TypeOfItem.product.ToString());
+
+                string description = activityMessages.delete.Replace("{1}", productName).Replace("{2}", EntityNameEnum.product.ToString());
+
                 await _CategoryService.CreateActivity(description, (int)userId);
+
                 return Ok();
             }
             catch (Exception ex)

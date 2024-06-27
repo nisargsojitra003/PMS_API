@@ -5,8 +5,9 @@ namespace PMS_API_BAL.Interfaces
 {
     public interface ILogin
     {
-        public Task<AspNetUser> LoginUser(Login model);
-        public Task<bool> CheckEmailInDb(string email);
-        public Task CreateNewUser(Login createUser);
+        public Task<bool> ValidateUserCredentials(UserInfo userInfo);
+        public Task<AspNetUser> LoggedInUserInfo(UserInfo userInfo);
+        public Task<bool> CheckIfEmailExist(string email);
+        public Task CreateNewUser(UserInfo createUser);
     }
 }

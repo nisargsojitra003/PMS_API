@@ -12,7 +12,7 @@ namespace PMS_API_DAL.Models.CustomeModel
 
         public int? userId { get; set; }
 
-        [Required(ErrorMessage = "Description is required")]
+        [Required(ErrorMessage = "Description is required")]    
         [StringLength(499, ErrorMessage = "Only 499 Characaters are Accepted")]
         [RegularExpression(@"^(?!\s*$).+", ErrorMessage = "Please Write a Description.")]
         public string? Description { get; set; }
@@ -20,9 +20,9 @@ namespace PMS_API_DAL.Models.CustomeModel
         [Required(ErrorMessage = "Product Price is required")]
         [Range(1, int.MaxValue, ErrorMessage = "The Price must be greater than zero")]
         [RegularExpression(@"^\d{1,8}(\.\d{1,2})?$", ErrorMessage = "The Price must be a number with up to 8 digits and up to 2 decimal places")]
-        public int? Price { get; set; }
+        public decimal? Price { get; set; }
 
-        [Required(ErrorMessage = "File is required")]
+
         public IFormFile? Fileupload { get; set; }
 
         [Required(ErrorMessage = "Categorytag is required")]

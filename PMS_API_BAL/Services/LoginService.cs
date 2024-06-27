@@ -18,38 +18,32 @@ namespace PMS_API_BAL.Services
             _CategoryService = categoryService;
             activityMessages = _activityMessages;
         }
-        public async Task<AspNetUser> LoginUser(Login login)
+        public async Task<bool> ValidateUserCredentials(UserInfo userInfo)
         {
             AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(u =>
-                u.Email.ToLower() == login.Email.ToLower());
+                u.Email.ToLower() == userInfo.Email.ToLower());
 
             if (user != null)
             {
-                // Validate password is correct or not?
-                bool isPasswordValid = GetHashPassword(user.Password, login.Password);
-                if (!GetHashPassword(user.Password, login.Password))
-                {
-                    return null;
-                }
+                return GetHashPassword(user.Password, userInfo.Password);
             }
 
+            return false;
+        }
+
+        public async Task<AspNetUser> LoggedInUserInfo(UserInfo userInfo)
+        {
+            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(a => a.Email == userInfo.Email);
             return user;
         }
 
-        public async Task<bool> CheckEmailInDb(string email)
+
+        public async Task<bool> CheckIfEmailExist(string email)
         {
-            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(i => i.Email == email);
-            if (user == null)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return await dbcontext.AspNetUsers.AnyAsync(i => i.Email == email);
         }
 
-        public async Task CreateNewUser(Login createUser)
+        public async Task CreateNewUser(UserInfo createUser)
         {
             string hashedPassword = SetHashPassword(createUser.Password);
 

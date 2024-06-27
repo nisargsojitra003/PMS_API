@@ -6,7 +6,7 @@ namespace PMS_API_BAL.Interfaces
     public interface ICategory
     {
         public Task<PagedList<Category>> CategoryList(int pageNumber, int pageSize, SearchFilter searchFilter);
-        public Task<int> TotalCount(int userId);
+        public Task<int> TotalCategoriesCount(int userId);
         public Task AddCategoryInDb(CategoryDTO addCategory);
         public Task<bool> CheckCategoryNameInDb(string categoryName, int userId);
         public Task<bool> CheckCategoryCodeInDb(string categoryCode, int userId);

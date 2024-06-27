@@ -30,50 +30,50 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> Login([FromForm] Login userInfo)
+        public async Task<ActionResult> CheckUserIfExist([FromForm] UserInfo userInfo)
         {
-            if (await _LoginService.CheckEmailInDb(userInfo.Email))
+            if (!await _LoginService.CheckIfEmailExist(userInfo.Email))
             {
                 return NotFound();
             }
 
-            AspNetUser user = await _LoginService.LoginUser(userInfo);
-
-            if (user != null)
+            if (await _LoginService.ValidateUserCredentials(userInfo))
             {
-                string jwtToken = _JwtService.GenerateToken(user);
-                //Response.Cookies.Append("jwt", jwtToken);
+                AspNetUser user = await _LoginService.LoggedInUserInfo(userInfo);
 
-                string actionName = "";
-                string controllerName = "";
+                string jwtToken = _JwtService.GenerateToken(user);
+                string actionName = string.Empty;
+                string controllerName = string.Empty;
+
                 switch (user.Role)
                 {
                     case "Admin":
                         actionName = "index";
-                        controllerName = "home";
+                        controllerName = "dashboard";
                         break;
                     case "User":
                         actionName = "index";
-                        controllerName = "home";
+                        controllerName = "dashboard";
                         break;
                 }
 
-                var response = new
+                UserResponse userResponse = new UserResponse()
                 {
-                    Action = actionName,
-                    Controller = controllerName,
+                    ActionName = actionName,
+                    ControllerName = controllerName,
                     JwtToken = jwtToken,
-                    role = user.Role,
-                    userId = user.Id
+                    UserRole = user.Role,
+                    UserId = user.Id
                 };
 
-                return Ok(response);
+                return Ok(userResponse);
             }
             else
             {
                 return BadRequest();
             }
         }
+
         #endregion
 
         #region CreateAccount Post Method
@@ -89,13 +89,13 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> CreateAccount([FromForm] Login userInfo)
+        public async Task<ActionResult> CreateAccount([FromForm] UserInfo userInfo)
         {
             if (!ModelState.IsValid)
             {
                 return NotFound();
             }
-            if (await _LoginService.CheckEmailInDb(userInfo.Email))
+            if (await _LoginService.CheckIfEmailExist(userInfo.Email))
             {
                 await _LoginService.CreateNewUser(userInfo);
                 return Ok();

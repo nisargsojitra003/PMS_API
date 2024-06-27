@@ -31,7 +31,6 @@ namespace PMS_API_BAL.Services
                 new Claim("AccessRoleIDs", list)
             };
 
-
             SymmetricSecurityKey key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

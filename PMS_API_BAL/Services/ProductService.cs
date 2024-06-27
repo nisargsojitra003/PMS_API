@@ -180,14 +180,12 @@ namespace PMS_API_BAL.Services
 
         public async Task<int> TotalActivities(int userId)
         {
-            int totalActivities = await dbcontext.UserActivities.Where(u => u.UserId == userId).CountAsync();
-            return totalActivities;
+            return await dbcontext.UserActivities.Where(u => u.UserId == userId).CountAsync();
         }
 
         public async Task<int> TotalProducts(int userId)
         {
-            int totalProducts = await dbcontext.Products.Where(p => p.DeletedAt == null && p.UserId == userId).CountAsync();
-            return totalProducts;
+            return await dbcontext.Products.Where(p => p.DeletedAt == null && p.UserId == userId).CountAsync();
         }
 
         public async Task<AddProduct> AddProductView(int userId)
@@ -220,7 +218,7 @@ namespace PMS_API_BAL.Services
 
         public async Task AddProductInDb(AddProductDTO addProduct)
         {
-            if (addProduct != null)
+            if (addProduct.Fileupload != null)
             {
                 string fileName = "";
                 string filePath = "";
@@ -252,6 +250,22 @@ namespace PMS_API_BAL.Services
                 await dbcontext.Products.AddAsync(product);
                 await dbcontext.SaveChangesAsync();
 
+            }
+            else
+            {
+                Product product = new Product
+                {
+                    Name = addProduct.ProductName.Trim(),
+                    CategoryId = (int)addProduct.CategoryId,
+                    CreatedAt = DateTime.Now,
+                    Categorytag = addProduct.CategoryTag,
+                    Filename = null,
+                    Price = addProduct.Price,
+                    Description = addProduct.Description.Trim(),
+                    UserId = addProduct.userId
+                };
+                await dbcontext.Products.AddAsync(product);
+                await dbcontext.SaveChangesAsync();
             }
 
         }
@@ -403,15 +417,13 @@ namespace PMS_API_BAL.Services
         public async Task<string> ProductName(int productId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-            string name = product.Name;
-            return name;
+            return product.Name;
         }
 
         public async Task<int> ProductUserid(int productId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-            int userId = (int)product.UserId;
-            return userId;
+            return (int)product.UserId;
         }
 
         public async Task DeleteProductImage(int productId)
@@ -425,18 +437,14 @@ namespace PMS_API_BAL.Services
             }
         }
 
-        public async Task<TotalCount> TotalCount(int userId)
+        public async Task<DashboardData> DashboardData(int userId)
         {
-            List<Category> categoryList = await dbcontext.Categories
-               .Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true)))
-               .OrderBy(c => c.Id)
-               .ToListAsync();
-            TotalCount totalCount = new TotalCount()
+            DashboardData dashboardData = new DashboardData()
             {
-                totalCategories = categoryList.Count(),
+                totalCategories = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true))).CountAsync(),
                 totalProducts = await dbcontext.Products.Where(p => (p.DeletedAt == null && p.UserId == userId)).CountAsync()
             };
-            return totalCount;
+            return dashboardData;
         }
 
         public async Task<bool> CheckProduct(int productId)
@@ -449,15 +457,7 @@ namespace PMS_API_BAL.Services
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Id == productId);
             int? productUserid = product.UserId;
-
-            if (productUserid != userId)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return productUserid != userId ? true : false;
         }
 
     }

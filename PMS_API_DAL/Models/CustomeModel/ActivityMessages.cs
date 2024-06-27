@@ -11,7 +11,7 @@
         public string delete = "{1} {2} has been deleted";
     }
 
-    public enum TypeOfItem 
+    public enum EntityNameEnum 
     {
         category,
         product

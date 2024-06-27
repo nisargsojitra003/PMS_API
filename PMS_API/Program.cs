@@ -23,6 +23,7 @@ builder.Services.AddScoped<IProduct, ProductService>();
 builder.Services.AddScoped<ICategory, CategoryService>();
 builder.Services.AddScoped<IJwt, JwtServices>();
 builder.Services.AddScoped<ILogin, LoginService>();
+builder.Services.AddScoped<IActivity, ActivityServices>();
 builder.Services.AddScoped<ActivityMessages>();
 
 // Configure response caching

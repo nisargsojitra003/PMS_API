@@ -2,7 +2,7 @@
 
 namespace PMS_API_DAL.Models.CustomeModel
 {
-    public class Login
+    public class UserInfo
     {
         [Required(ErrorMessage = "Email is required")]
         [RegularExpression(@"^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$", ErrorMessage = "Please enter a valid e-mail address")]

@@ -22,9 +22,9 @@ namespace PMS_API_DAL.Models.CustomeModel
         [Required(ErrorMessage = "Product Price is required")]
         [Range(1, int.MaxValue, ErrorMessage = "The Price must be greater than zero")]
         [RegularExpression(@"^\d{1,8}(\.\d{1,2})?$", ErrorMessage = "The Price must be a number with up to 8 digits and up to 2 decimal places")]
-        public int? Price { get; set; }
+        public decimal? Price { get; set; }
 
-        
+
         public IFormFile? Fileupload { get; set; }
 
         [Required(ErrorMessage = "Categorytag is required")]
