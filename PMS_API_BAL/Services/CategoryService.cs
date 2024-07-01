@@ -107,8 +107,7 @@ namespace PMS_API_BAL.Services
                     Name = p.Name,
                     Code = p.Code,
                     IsSystem = p.IsSystem
-                })
-                .ToListAsync();
+                }).ToListAsync();
 
             return new PagedList<Category>(categoryList, totalCount, pageNumber, pageSize);
         }
@@ -128,8 +127,8 @@ namespace PMS_API_BAL.Services
                 IsSystem = false,
                 Description = addCategory.Description,
                 UserId = addCategory.UserId
-
             };
+
             await dbcontext.Categories.AddAsync(category);
             await dbcontext.SaveChangesAsync();
         }
@@ -202,13 +201,13 @@ namespace PMS_API_BAL.Services
             }
         }
 
-        public async Task<string> CategotyName(int categoryId)
+        public async Task<string> CategoryName(int categoryId)
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
             return category.Name;
         }
 
-        public async Task<int> CategotyUserid(int categoryId)
+        public async Task<int> CategoryUserid(int categoryId)
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
             return (int)category.UserId;
@@ -223,6 +222,7 @@ namespace PMS_API_BAL.Services
                 Description = description,
                 UserId = userId,
             };
+
             await dbcontext.AddAsync(userActivity);
             await dbcontext.SaveChangesAsync();
         }
@@ -232,12 +232,25 @@ namespace PMS_API_BAL.Services
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
             return category != null ? true : false;
         }
-
+            
         public async Task<bool> CheckUsersCategory(int categoryId, int userId)
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+
             int? categoryUserid = category.UserId;
+
             return categoryUserid != userId ? true : false;
+        }
+
+        public async Task<bool> GetCategoryTypeById(int categoryId)
+        {
+            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+            if (category == null)
+            {
+                return false;
+            }
+            bool isSystem = category.IsSystem == true ? true : false;
+            return isSystem;
         }
     }
 }

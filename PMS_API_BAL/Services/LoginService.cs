@@ -20,8 +20,7 @@ namespace PMS_API_BAL.Services
         }
         public async Task<bool> ValidateUserCredentials(UserInfo userInfo)
         {
-            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(u =>
-                u.Email.ToLower() == userInfo.Email.ToLower());
+            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(u => u.Email.ToLower() == userInfo.Email.ToLower());
 
             if (user != null)
             {
@@ -36,7 +35,6 @@ namespace PMS_API_BAL.Services
             AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(a => a.Email == userInfo.Email);
             return user;
         }
-
 
         public async Task<bool> CheckIfEmailExist(string email)
         {
@@ -58,7 +56,7 @@ namespace PMS_API_BAL.Services
             await dbcontext.AspNetUsers.AddAsync(aspNetUser);
             await dbcontext.SaveChangesAsync();
 
-            //Add entry in useractivity for create account successfully.
+            //Add entry in useractivity When account created successfully.
             string description = activityMessages.createAccountRecord.Replace("{1}", createUser.Email);
             await _CategoryService.CreateActivity(description, aspNetUser.Id);
         }

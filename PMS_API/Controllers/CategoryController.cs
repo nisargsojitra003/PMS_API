@@ -25,7 +25,7 @@ namespace PMS_API.Controllers
         /// <param name="searchFilter">Filter criteria for searching categories.</param>
         /// <returns>All categories that match the filter and pagination criteria.</returns>
         [Authorize]
-        [HttpGet("getallcategories", Name = "GetCategoryList")]
+        [HttpGet("list", Name = "GetCategoryList")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -34,14 +34,17 @@ namespace PMS_API.Controllers
         [ResponseCache(Duration = 15)]
         public async Task<ActionResult<PagedList<Category>>> List([FromQuery] SearchFilter searchFilter)
         {
-            int totalCount = await _CategoryService.TotalCategoriesCount((int)searchFilter.userId);
+            int totalCategoryCounts = await _CategoryService.TotalCategoriesCount((int)searchFilter.userId);
+
             string pageNumber = searchFilter.categoryPageNumber ?? "1";
             string pageSize = searchFilter.categoryPageSize ?? "5";
-            PagedList<Category> allCategoties = await _CategoryService.CategoryList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
-            CategoryListResponse categoryListResponse = new CategoryListResponse 
-            { 
-                TotalRecords = totalCount,
-                CategoryList = allCategoties
+
+            PagedList<Category> categoryList = await _CategoryService.CategoryList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
+
+            CategoryListResponse categoryListResponse = new CategoryListResponse
+            {
+                TotalRecords = totalCategoryCounts,
+                CategoryList = categoryList
             };
 
             return Ok(categoryListResponse);
@@ -60,8 +63,8 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [HttpGet("getcategory/{id:int}", Name = "GetCategory")]
-        public async Task<ActionResult<Category>> Get(int id,int userId)
+        [HttpGet("get/{id:int}", Name = "GetCategory")]
+        public async Task<ActionResult<Category>> Get(int id, int userId)
         {
             try
             {
@@ -69,15 +72,19 @@ namespace PMS_API.Controllers
                 {
                     return BadRequest("Invalid category ID.");
                 }
-                if(! await _CategoryService.CheckCategory(id))
+
+                bool typeOfCategory = await _CategoryService.GetCategoryTypeById(id);
+
+                if (!typeOfCategory)
                 {
-                    return NotFound();
+                    if (!await _CategoryService.CheckCategory(id) || await _CategoryService.CheckUsersCategory(id, userId))
+                    {
+                        return NotFound();
+                    }
                 }
-                if(await _CategoryService.CheckUsersCategory(id, userId))
-                {
-                    return NotFound();
-                }
+
                 Category category = await _CategoryService.GetCategoryById(id);
+
                 if (category == null)
                 {
                     return NotFound("Category not found.");
@@ -110,17 +117,16 @@ namespace PMS_API.Controllers
             {
                 return NotFound();
             }
-            if (await _CategoryService.CheckCategoryNameInDb(addCategory.Name, (int)addCategory.UserId))
+            if (await _CategoryService.CheckCategoryNameInDb(addCategory.Name, (int)addCategory.UserId) || await _CategoryService.CheckCategoryCodeInDb(addCategory.Code, (int)addCategory.UserId))
             {
                 return BadRequest();
             }
-            if (await _CategoryService.CheckCategoryCodeInDb(addCategory.Code, (int)addCategory.UserId))
-            {
-                return BadRequest();
-            }
+           
             await _CategoryService.AddCategoryInDb(addCategory);
-            string description = activityMessages.add.Replace("{1}", addCategory.Name).Replace("{2}", EntityNameEnum.category.ToString());
+
+            string description = activityMessages.add.Replace("{1}", addCategory.Name).Replace("{2}", nameof(EntityNameEnum.category));
             await _CategoryService.CreateActivity(description, (int)addCategory.UserId);
+
             return Ok();
         }
         #endregion
@@ -149,9 +155,10 @@ namespace PMS_API.Controllers
             {
                 return BadRequest();
             }
+
             await _CategoryService.EditCategory(id, category);
 
-            string description = activityMessages.edit.Replace("{1}", category.Name).Replace("{2}", EntityNameEnum.category.ToString());
+            string description = activityMessages.edit.Replace("{1}", category.Name).Replace("{2}", nameof(EntityNameEnum.category));
 
             await _CategoryService.CreateActivity(description, (int)category.UserId);
 
@@ -174,16 +181,17 @@ namespace PMS_API.Controllers
         [HttpPost("delete/{id:int}", Name = "DeleteCategory")]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!await _CategoryService.CategoryCount(id))
+            if (!await _CategoryService.CheckCategory(id) || !await _CategoryService.CategoryCount(id))
             {
                 return BadRequest();
             }
+
             await _CategoryService.DeleteCategory(id);
 
-            string categoryName = await _CategoryService.CategotyName(id);
-            int userid = await _CategoryService.CategotyUserid(id);
+            string categoryName = await _CategoryService.CategoryName(id);
+            int userid = await _CategoryService.CategoryUserid(id);
 
-            string description = activityMessages.delete.Replace("{1}", categoryName).Replace("{2}", EntityNameEnum.category.ToString());
+            string description = activityMessages.delete.Replace("{1}", categoryName).Replace("{2}", nameof(EntityNameEnum.category));
 
             await _CategoryService.CreateActivity(description, userid);
 

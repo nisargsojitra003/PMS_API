@@ -101,7 +101,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Middleware order is important
 app.UseHttpsRedirection();
 app.UseResponseCaching();
 app.UseAuthentication();

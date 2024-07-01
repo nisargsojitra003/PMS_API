@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMS_API_BAL.Interfaces;
 using PMS_API_DAL.Models.CustomeModel;
+using System.Runtime.InteropServices;
 
 namespace PMS_API.Controllers
 {
@@ -29,7 +30,7 @@ namespace PMS_API.Controllers
         /// <param name="searchFilter"></param>
         /// <returns>All products that match the filter and pagination criteria.</returns>
         [Authorize]
-        [HttpGet("getallproducts", Name = "GetProductsList")]
+        [HttpGet("list", Name = "GetProductsList")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -38,20 +39,24 @@ namespace PMS_API.Controllers
         [ResponseCache(Duration = 15)]
         public async Task<ActionResult<PagedList<AddProduct>>> List([FromQuery] SearchFilter searchFilter)
         {
-            int totalProducts = await _ProductService.TotalProducts((int)searchFilter.userId);
+            int totalProductsCounts = await _ProductService.TotalProducts((int)searchFilter.userId);
+
             string pageNumber = searchFilter.productPageNumber ?? "1";
             string pageSize = searchFilter.productPageSize ?? "5";
-            PagedList<AddProduct> getAllProducts = await _ProductService.ProductList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
-            ProductListResponse productListResponse = new ProductListResponse 
+
+            PagedList<AddProduct> productList = await _ProductService.ProductList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
+
+            ProductListResponse productListResponse = new ProductListResponse
             {
-                TotalRecords = totalProducts,
-                ProductList = getAllProducts
+                TotalRecords = totalProductsCounts,
+                ProductList = productList
             };
+
             return Ok(productListResponse);
         }
         #endregion
 
-        
+
 
         #region CreateProduct Post Method
         /// <summary>
@@ -73,13 +78,15 @@ namespace PMS_API.Controllers
             {
                 return NotFound();
             }
+
             if (await _ProductService.CheckProductInDb(product.ProductName, (int)product.CategoryId, (int)product.userId))
             {
                 return BadRequest();
             }
+
             await _ProductService.AddProductInDb(product);
 
-            string description = activityMessages.add.Replace("{1}", product.ProductName).Replace("{2}", EntityNameEnum.product.ToString());
+            string description = activityMessages.add.Replace("{1}", product.ProductName).Replace("{2}", nameof(EntityNameEnum.product));
 
             await _CategoryService.CreateActivity(description, (int)product.userId);
 
@@ -103,10 +110,12 @@ namespace PMS_API.Controllers
         public async Task<ActionResult> GetAddCategories(int id)
         {
             AddProduct categories = await _ProductService.AddProductView(id);
+
             if (categories == null)
             {
                 return BadRequest();
             }
+
             return Ok(categories);
         }
         #endregion
@@ -131,6 +140,7 @@ namespace PMS_API.Controllers
             {
                 return BadRequest();
             }
+
             return Ok(categories);
         }
         #endregion
@@ -143,7 +153,7 @@ namespace PMS_API.Controllers
         /// <param name="userId"></param>
         /// <returns>all product's details</returns>
         [Authorize]
-        [HttpGet("getproduct/{id:int}", Name = "GetProduct")]
+        [HttpGet("get/{id:int}", Name = "GetProduct")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -153,15 +163,13 @@ namespace PMS_API.Controllers
         {
             try
             {
-                if (!await _ProductService.CheckProduct(id))
+                if (!await _ProductService.CheckProduct(id) || await _ProductService.CheckUsersProduct(id, userId))
                 {
                     return NotFound();
                 }
-                if (await _ProductService.CheckUsersProduct(id, userId))
-                {
-                    return NotFound();
-                }
+
                 EditProduct product = await _ProductService.GetProduct(id, userId);
+
                 if (product == null)
                 {
                     return BadRequest();
@@ -203,8 +211,10 @@ namespace PMS_API.Controllers
             }
 
             await _ProductService.EditProduct(id, editProduct);
-            string description = activityMessages.edit.Replace("{1}", editProduct.ProductName).Replace("{2}", EntityNameEnum.product.ToString());
+
+            string description = activityMessages.edit.Replace("{1}", editProduct.ProductName).Replace("{2}", nameof(EntityNameEnum.product));
             await _CategoryService.CreateActivity(description, (int)editProduct.userId);
+
             return Ok();
         }
         #endregion
@@ -226,16 +236,22 @@ namespace PMS_API.Controllers
         {
             try
             {
-                if (id <= 0)
+                if (!await _ProductService.CheckProduct(id) || id <= 0)
                 {
                     return BadRequest();
                 }
+
                 await _ProductService.DeleteProduct(id);
 
                 string productName = await _ProductService.ProductName(id);
                 int userId = await _ProductService.ProductUserid(id);
 
-                string description = activityMessages.delete.Replace("{1}", productName).Replace("{2}", EntityNameEnum.product.ToString());
+                if (productName == string.Empty || userId <= 0)
+                {
+                    return BadRequest();
+                }
+
+                string description = activityMessages.delete.Replace("{1}", productName).Replace("{2}", nameof(EntityNameEnum.product));
 
                 await _CategoryService.CreateActivity(description, (int)userId);
 
@@ -267,7 +283,9 @@ namespace PMS_API.Controllers
             {
                 return BadRequest();
             }
+
             await _ProductService.DeleteProductImage(id);
+
             return Ok();
         }
         #endregion

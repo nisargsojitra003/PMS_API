@@ -18,14 +18,14 @@ namespace PMS_API.Controllers
             _logger = logger;
             _ActivityService = activity;
         }
-        #region UserActivity
+        #region UserActivity List
         /// <summary>
         /// Get all user's Activity.
         /// </summary>
         /// <param name="searchFilter"></param>
         /// <returns>all activity of logged in user</returns>
         [Authorize]
-        [HttpGet("getallactivity", Name = "GetAllActivityOfuser")]
+        [HttpGet("list", Name = "GetAllActivityOfuser")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -39,15 +39,20 @@ namespace PMS_API.Controllers
             {
                 return BadRequest();
             }
-            int totalActivities = await _ActivityService.TotalActivities((int)searchFilter.userId);
+
+            int totalActivitiesCounts = await _ActivityService.TotalActivities((int)searchFilter.userId);
+
             string pageNumber = searchFilter.activityPageNumber ?? "1";
             string pageSize = searchFilter.activityPageSize ?? "5";
+
             PagedList<UserActivity> activityList = await _ActivityService.UserActivityList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
+
             ActivityListResponse activityListResponse = new ActivityListResponse()
             {
-                TotalRecords = totalActivities,
+                TotalRecords = totalActivitiesCounts,
                 ActivityList = activityList
             };
+
             return Ok(activityListResponse);
         }
         #endregion

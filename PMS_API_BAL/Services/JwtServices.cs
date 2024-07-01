@@ -25,7 +25,6 @@ namespace PMS_API_BAL.Services
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Email, user.Email),
-
                 new Claim(ClaimTypes.Role, user.Role),
                 new Claim("userId", user.Id.ToString()),
                 new Claim("AccessRoleIDs", list)
@@ -44,6 +43,7 @@ namespace PMS_API_BAL.Services
                 expires: expires,
                 signingCredentials: creds
             );
+
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
@@ -52,8 +52,10 @@ namespace PMS_API_BAL.Services
             jwtSecurityToken = null;
 
             if (token == null)
+            {
                 return false;
-
+            }
+                
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
 
             byte[] key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);

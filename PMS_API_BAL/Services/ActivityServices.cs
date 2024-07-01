@@ -59,8 +59,7 @@ namespace PMS_API_BAL.Services
                     Id = p.Id,
                     Description = p.Description,
                     CreatedAt = p.CreatedAt,
-                })
-                .ToListAsync();
+                }).ToListAsync();
 
             return new PagedList<UserActivity>(activityMainList, totalCount, pageNumber, pageSize);
         }

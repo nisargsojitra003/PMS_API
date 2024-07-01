@@ -16,9 +16,10 @@ namespace PMS_API_BAL.Interfaces
         public Task<bool> CategoryCount(int categoryId);
         public Task DeleteCategory(int categoryId);
         public Task CreateActivity(string description, int userId);
-        public Task<string> CategotyName(int categoryId);
-        public Task<int> CategotyUserid(int categoryId);
+        public Task<string> CategoryName(int categoryId);
+        public Task<int> CategoryUserid(int categoryId);
         public Task<bool> CheckCategory(int categoryId);
         public Task<bool> CheckUsersCategory(int categoryId, int userId);
+        public Task<bool> GetCategoryTypeById(int categoryId);
     }
 }

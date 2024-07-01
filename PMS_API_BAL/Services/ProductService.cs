@@ -127,68 +127,14 @@ namespace PMS_API_BAL.Services
                     CategoryName = p.Category.Name,
                     Description = p.Description,
                     Price = p.Price
-                })
-                .ToListAsync();
+                }).ToListAsync();
 
             return new PagedList<AddProduct>(productsList, totalCount, pageNumber, pageSize);
         }
 
-        public async Task<PagedList<UserActivity>> UserActivityList(int pageNumber, int pageSize, SearchFilter searchFilter)
-        {
-            IQueryable<UserActivity> activityList = dbcontext.UserActivities
-                .Where(u => u.UserId == searchFilter.userId)
-                .OrderByDescending(u => u.CreatedAt)
-                .AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchFilter.searchActivity))
-            {
-                activityList = activityList.Where(c => c.Description.ToLower().Trim().Contains(searchFilter.searchActivity.ToLower()));
-                pageNumber = 1;
-            }
-            if (activityList.Count() >= 2)
-            {
-                switch (searchFilter.sortTypeActivity)
-                {
-                    case 1:
-                        activityList = activityList.OrderBy(c => c.CreatedAt);
-                        break;
-                    case 2:
-                        activityList = activityList.OrderByDescending(c => c.CreatedAt);
-                        break;
-                    case 3:
-                        activityList = activityList.OrderBy(c => c.Description);
-                        break;
-                    case 4:
-                        activityList = activityList.OrderByDescending(c => c.Description);
-                        break;
-                    default:
-                        activityList = activityList.AsQueryable();
-                        break;
-                }
-            }
-            int totalCount = activityList.Count();
-
-            List<UserActivity> activityMainList = await activityList
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(p => new UserActivity
-                {
-                    Id = p.Id,
-                    Description = p.Description,
-                    CreatedAt = p.CreatedAt,
-                })
-                .ToListAsync();
-            return new PagedList<UserActivity>(activityMainList, totalCount, pageNumber, pageSize);
-        }
-
-        public async Task<int> TotalActivities(int userId)
-        {
-            return await dbcontext.UserActivities.Where(u => u.UserId == userId).CountAsync();
-        }
-
         public async Task<int> TotalProducts(int userId)
         {
-            return await dbcontext.Products.Where(p => p.DeletedAt == null && p.UserId == userId).CountAsync();
+            return await dbcontext.Products.Where(p => !p.DeletedAt.HasValue && p.UserId == userId).CountAsync();
         }
 
         public async Task<AddProduct> AddProductView(int userId)
@@ -335,7 +281,7 @@ namespace PMS_API_BAL.Services
 
             if (editProduct.Fileupload != null)
             {
-                if (product.Filename != null)
+                if (product?.Filename != null)
                 {
                     string fileNameMain = product.Filename;
                     string filePath1Main = Path.Combine(Directory.GetCurrentDirectory(), "UploadDocuments", fileNameMain);
@@ -415,19 +361,19 @@ namespace PMS_API_BAL.Services
         public async Task<string> ProductName(int productId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-            return product.Name;
+            return product?.Name ?? string.Empty;
         }
 
         public async Task<int> ProductUserid(int productId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-            return (int)product.UserId;
+            return product?.UserId ?? 0;
         }
 
         public async Task DeleteProductImage(int productId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-            if (product.Filename != null)
+            if (product?.Filename != null)
             {
                 product.Filename = null;
                 dbcontext.Products.Update(product);
@@ -435,13 +381,14 @@ namespace PMS_API_BAL.Services
             }
         }
 
-        public async Task<DashboardData> DashboardData(int userId)
+        public async Task<DashboardData> UserDashboardData(int userId)
         {
             DashboardData dashboardData = new DashboardData()
             {
                 totalCategories = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true))).CountAsync(),
-                totalProducts = await dbcontext.Products.Where(p => (p.DeletedAt == null && p.UserId == userId)).CountAsync()
+                totalProducts = await dbcontext.Products.Where(p => (!p.DeletedAt.HasValue && p.UserId == userId)).CountAsync()
             };
+
             return dashboardData;
         }
 
@@ -454,7 +401,7 @@ namespace PMS_API_BAL.Services
         public async Task<bool> CheckUsersProduct(int productId, int userId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Id == productId);
-            int? productUserid = product.UserId;
+            int? productUserid = product?.UserId;
             return productUserid != userId ? true : false;
         }
     }

@@ -19,7 +19,7 @@ namespace PMS_API.Controllers
 
         #region Login Method
         /// <summary>
-        /// Check user is validate
+        /// Check user is validate or not?
         /// </summary>
         /// <param name="userInfo"></param>
         /// <returns>indicating success or failure.</returns>
@@ -47,11 +47,11 @@ namespace PMS_API.Controllers
 
                 switch (user.Role)
                 {
-                    case "Admin":
+                    case nameof(RoleEnum.Admin):
                         actionName = "index";
                         controllerName = "dashboard";
                         break;
-                    case "User":
+                    case nameof(RoleEnum.User):
                         actionName = "index";
                         controllerName = "dashboard";
                         break;
@@ -95,7 +95,7 @@ namespace PMS_API.Controllers
             {
                 return NotFound();
             }
-            if (await _LoginService.CheckIfEmailExist(userInfo.Email))
+            if (!await _LoginService.CheckIfEmailExist(userInfo.Email))
             {
                 await _LoginService.CreateNewUser(userInfo);
                 return Ok();
@@ -109,7 +109,7 @@ namespace PMS_API.Controllers
 
         #region Logout
         /// <summary>
-        /// Logout method
+        /// Logout method(remove authorization header from response)
         /// </summary>
         /// <returns></returns>
         [HttpPost("logout", Name = "Logout")]
@@ -120,15 +120,8 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult Logout()
         {
-            if (Request.Cookies["jwt"] != null)
-            {
-                Response.Cookies.Delete("jwt");
-                return Ok(new { message = "Logout successful" });
-            }
-            else
-            {
-                return BadRequest();
-            }
+            Response.Headers.Remove("Authorization");
+            return Ok();
         }
         #endregion
     }

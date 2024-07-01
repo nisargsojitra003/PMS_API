@@ -34,7 +34,9 @@ namespace PMS_API.Controllers
             {
                 return BadRequest();
             }
-            DashboardData dashboardData = await _ProductService.DashboardData(id);
+
+            DashboardData dashboardData = await _ProductService.UserDashboardData(id);
+
             return Ok(dashboardData);
         }
         #endregion
