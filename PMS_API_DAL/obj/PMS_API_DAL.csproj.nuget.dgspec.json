@@ -60,6 +60,10 @@
               "target": "Package",
               "version": "[7.0.20, )"
             },
+            "Microsoft.AspNetCore.ResponseCaching": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[7.0.20, )"

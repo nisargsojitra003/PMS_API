@@ -18,7 +18,7 @@ namespace PMS_API_BAL.Services
         public async Task<PagedList<AddProduct>> ProductList(int pageNumber, int pageSize, SearchFilter searchFilter)
         {
             IQueryable<Product> query = dbcontext.Products.Include(r => r.Category)
-                .Where(p => (p.DeletedAt == null && p.UserId == searchFilter.userId))
+                .Where(p => (!p.DeletedAt.HasValue && p.UserId == searchFilter.userId))
                 .OrderBy(p => p.Id)
                 .AsQueryable();
 
@@ -26,6 +26,7 @@ namespace PMS_API_BAL.Services
             {
                 query = query.Where(p => p.Name.ToLower().Contains(searchFilter.searchProduct.ToLower()));
             }
+
             if (!string.IsNullOrEmpty(searchFilter.searchCategoryTag))
             {
                 if (!string.IsNullOrEmpty(searchFilter.searchProduct))
@@ -38,6 +39,7 @@ namespace PMS_API_BAL.Services
                 }
                 pageNumber = 1;
             }
+
             if (!string.IsNullOrEmpty(searchFilter.searchDescription))
             {
                 if (!string.IsNullOrEmpty(searchFilter.searchProduct) && (!string.IsNullOrEmpty(searchFilter.searchCategoryTag)))
@@ -104,6 +106,7 @@ namespace PMS_API_BAL.Services
                         query = query.OrderByDescending(p => p.Category.Name);
                         break;
                     default:
+                        query = query.AsQueryable();
                         break;
                 }
             }
@@ -190,13 +193,9 @@ namespace PMS_API_BAL.Services
 
         public async Task<AddProduct> AddProductView(int userId)
         {
-            List<Category> categoryList = await dbcontext.Categories
-               .Where(c => (c.DeletedAt == null && (c.UserId == userId || (c.UserId == null && c.IsSystem == true))))
-               .OrderBy(c => c.Id)
-               .ToListAsync();
             AddProduct addProduct = new AddProduct()
             {
-                categories = categoryList
+                categories = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true))).OrderBy(c => c.Id).ToListAsync()
             };
             return addProduct;
         }
@@ -211,7 +210,7 @@ namespace PMS_API_BAL.Services
         {
             EditProduct addProduct = new EditProduct()
             {
-                CategoryList = await dbcontext.Categories.Where(c => c.DeletedAt == null).ToListAsync(),
+                CategoryList = await dbcontext.Categories.Where(c => !c.DeletedAt.HasValue).ToListAsync(),
             };
             return addProduct;
         }
@@ -220,8 +219,8 @@ namespace PMS_API_BAL.Services
         {
             if (addProduct.Fileupload != null)
             {
-                string fileName = "";
-                string filePath = "";
+                string fileName = string.Empty;
+                string filePath = string.Empty;
                 fileName = $"{Guid.NewGuid().ToString()}_{addProduct.Fileupload.FileName}";
                 filePath = Path.Combine(Directory.GetCurrentDirectory(), "UploadDocuments", fileName);
 
@@ -275,16 +274,14 @@ namespace PMS_API_BAL.Services
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
             {
-                // Handle the case when the product is not found, e.g., return null or throw an exception.
                 return null;
             }
 
-            List<Category> categoryList = await dbcontext.Categories
-               .Where(c => (c.DeletedAt == null && (c.UserId == userId || (c.UserId == null && c.IsSystem == true))))
-               .OrderBy(c => c.Id)
-               .ToListAsync();
+            List<Category> categoryList = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true)))
+                .OrderBy(c => c.Id).ToListAsync();
 
             List<CategoryList> categoryList1 = new List<CategoryList>();
+
             foreach (Category category in categoryList)
             {
                 categoryList1.Add(new CategoryList
@@ -313,11 +310,11 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProductEditName(int productId, EditProductDTO editProduct)
         {
-            // Check if the new name exists in the same category for the same user
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+
             if (product == null)
             {
-                return false; // or handle appropriately
+                return false;
             }
 
             if (editProduct.ProductName.ToLower() != product.Name.ToLower() || editProduct.CategoryId != product.CategoryId)
@@ -329,8 +326,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProductNameExist(string productName, int categoryId, int userId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Name.ToLower() == productName.ToLower() && p.CategoryId == categoryId && p.UserId == userId);
-            return product != null;
+            return await dbcontext.Products.AnyAsync(p => p.Name.ToLower() == productName.ToLower() && p.CategoryId == categoryId && p.UserId == userId);
         }
 
         public async Task EditProduct(int productId, EditProductDTO editProduct)
@@ -353,8 +349,10 @@ namespace PMS_API_BAL.Services
                     dbcontext.Products.Update(product);
                     await dbcontext.SaveChangesAsync();
                 }
-                string fileName = "";
-                string filePath = "";
+
+                string fileName = string.Empty;
+                string filePath = string.Empty;
+
                 fileName = $"{Guid.NewGuid().ToString()}_{editProduct.Fileupload.FileName}";
                 filePath = Path.Combine(Directory.GetCurrentDirectory(), "UploadDocuments", fileName);
 
@@ -459,6 +457,5 @@ namespace PMS_API_BAL.Services
             int? productUserid = product.UserId;
             return productUserid != userId ? true : false;
         }
-
     }
 }

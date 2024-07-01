@@ -57,6 +57,7 @@ namespace PMS_API_BAL.Services
 
             await dbcontext.AspNetUsers.AddAsync(aspNetUser);
             await dbcontext.SaveChangesAsync();
+
             //Add entry in useractivity for create account successfully.
             string description = activityMessages.createAccountRecord.Replace("{1}", createUser.Email);
             await _CategoryService.CreateActivity(description, aspNetUser.Id);
@@ -79,6 +80,7 @@ namespace PMS_API_BAL.Services
             Array.Copy(hash, 0, hashBytes, 16, 32);
 
             string hashedPassword = Convert.ToBase64String(hashBytes);
+
             return hashedPassword;
         }
 

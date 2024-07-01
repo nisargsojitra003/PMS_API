@@ -149,7 +149,7 @@ namespace PMS_API.Controllers
             {
                 return BadRequest();
             }
-            await _CategoryService.EditProduct(id, category);
+            await _CategoryService.EditCategory(id, category);
 
             string description = activityMessages.edit.Replace("{1}", category.Name).Replace("{2}", EntityNameEnum.category.ToString());
 

@@ -26,6 +26,7 @@ namespace PMS_API_BAL.Services
                 activityList = activityList.Where(c => c.Description.ToLower().Trim().Contains(searchFilter.searchActivity.ToLower()));
                 pageNumber = 1;
             }
+
             if (activityList.Count() >= 2)
             {
                 switch (searchFilter.sortTypeActivity)
@@ -47,6 +48,7 @@ namespace PMS_API_BAL.Services
                         break;
                 }
             }
+
             int totalCount = activityList.Count();
 
             List<UserActivity> activityMainList = await activityList
@@ -59,6 +61,7 @@ namespace PMS_API_BAL.Services
                     CreatedAt = p.CreatedAt,
                 })
                 .ToListAsync();
+
             return new PagedList<UserActivity>(activityMainList, totalCount, pageNumber, pageSize);
         }
 
@@ -66,7 +69,5 @@ namespace PMS_API_BAL.Services
         {
             return await dbcontext.UserActivities.Where(u => u.UserId == userId).CountAsync();
         }
-
-
     }
 }

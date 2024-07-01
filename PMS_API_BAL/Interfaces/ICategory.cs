@@ -12,7 +12,7 @@ namespace PMS_API_BAL.Interfaces
         public Task<bool> CheckCategoryCodeInDb(string categoryCode, int userId);
         public Task<Category> GetCategoryById(int id);
         public Task<bool> IsCategoryNameOrCodeExist(CategoryDTO editCategory, int currentCategoryId, int userId);
-        public Task EditProduct(int id, CategoryDTO category);
+        public Task EditCategory(int id, CategoryDTO category);
         public Task<bool> CategoryCount(int categoryId);
         public Task DeleteCategory(int categoryId);
         public Task CreateActivity(string description, int userId);

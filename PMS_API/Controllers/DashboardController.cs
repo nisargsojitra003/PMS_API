@@ -15,7 +15,7 @@ namespace PMS_API.Controllers
             _ProductService = product;
         }
 
-        #region GetCategoryandproduct Counts
+        #region Get User's Dashboard data
         /// <summary>
         /// Get Counts of user's TotalCategory and TotalProduct
         /// </summary>
@@ -34,8 +34,8 @@ namespace PMS_API.Controllers
             {
                 return BadRequest();
             }
-            DashboardData counts = await _ProductService.DashboardData(id);
-            return Ok(counts);
+            DashboardData dashboardData = await _ProductService.DashboardData(id);
+            return Ok(dashboardData);
         }
         #endregion
     }

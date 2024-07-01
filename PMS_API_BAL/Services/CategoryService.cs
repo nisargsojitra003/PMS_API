@@ -17,9 +17,9 @@ namespace PMS_API_BAL.Services
         public async Task<PagedList<Category>> CategoryList(int pageNumber, int pageSize, SearchFilter searchFilter)
         {
             IQueryable<Category> query = dbcontext.Categories
-                            .Where(c => (c.DeletedAt == null && (c.UserId == searchFilter.userId || (c.UserId == null && c.IsSystem == true))))
-                            .OrderByDescending(c => c.IsSystem == true).ThenBy(c => c.Id)
-                            .AsQueryable();
+                            .Where(c => (!c.DeletedAt.HasValue && (c.UserId == searchFilter.userId || c.IsSystem == true)))
+                            .OrderByDescending(c => c.IsSystem == true)
+                            .ThenBy(c => c.Id).AsQueryable();
 
             if (!string.IsNullOrEmpty(searchFilter.SearchName))
             {
@@ -109,16 +109,13 @@ namespace PMS_API_BAL.Services
                     IsSystem = p.IsSystem
                 })
                 .ToListAsync();
+
             return new PagedList<Category>(categoryList, totalCount, pageNumber, pageSize);
         }
 
         public async Task<int> TotalCategoriesCount(int userId)
         {
-            int totalCount = await dbcontext.Categories
-                            .Where(c => (c.DeletedAt == null && (c.UserId == userId || (c.UserId == null && c.IsSystem == true))))
-                            .OrderByDescending(c => c.IsSystem == true).ThenBy(c => c.Id)
-                            .CountAsync();
-            return totalCount;
+            return await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true))).CountAsync();
         }
 
         public async Task AddCategoryInDb(CategoryDTO addCategory)
@@ -172,7 +169,7 @@ namespace PMS_API_BAL.Services
                 c.Id != currentCategoryId && (c.UserId == userId || c.IsSystem == true));
         }
 
-        public async Task EditProduct(int id, CategoryDTO category)
+        public async Task EditCategory(int id, CategoryDTO category)
         {
             Category? mainCategory = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == id);
 
@@ -190,8 +187,8 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CategoryCount(int categoryId)
         {
-            List<Product> productList = await dbcontext.Products.Where(p => (p.CategoryId == categoryId && p.DeletedAt == null)).ToListAsync();
-            return productList.Count() == 0 ? true : false;
+            int productListCount = await dbcontext.Products.Where(p => (p.CategoryId == categoryId && p.DeletedAt == null)).CountAsync();
+            return productListCount == 0 ? true : false;
         }
 
         public async Task DeleteCategory(int categoryId)

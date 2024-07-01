@@ -33,6 +33,7 @@ namespace PMS_API_BAL.Services
 
             SymmetricSecurityKey key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+
             SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             DateTime expires = DateTime.UtcNow.AddDays(1);
 
@@ -43,7 +44,6 @@ namespace PMS_API_BAL.Services
                 expires: expires,
                 signingCredentials: creds
             );
-
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
@@ -55,7 +55,9 @@ namespace PMS_API_BAL.Services
                 return false;
 
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+
             byte[] key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
             try
             {
                 tokenHandler.ValidateToken(token, new TokenValidationParameters
