@@ -6,10 +6,10 @@ namespace PMS_API_BAL.Interfaces
     public interface ICategory
     {
         public Task<PagedList<Category>> CategoryList(int pageNumber, int pageSize, SearchFilter searchFilter);
-        public Task<int> TotalCategoriesCount(int userId);
+        public Task<int> TotalCategoriesCount(SearchFilter searchFilter);
         public Task AddCategoryInDb(CategoryDTO addCategory);
-        public Task<bool> CheckCategoryNameInDb(string categoryName, int userId);
-        public Task<bool> CheckCategoryCodeInDb(string categoryCode, int userId);
+        public Task<bool> CheckCategoryIfAlreayExist(CategoryDTO category);
+        public Task<bool> CheckCategoryCodeInDb(CategoryDTO category);
         public Task<Category> GetCategoryById(int id);
         public Task<bool> IsCategoryNameOrCodeExist(CategoryDTO editCategory, int currentCategoryId, int userId);
         public Task EditCategory(int id, CategoryDTO category);
@@ -20,6 +20,6 @@ namespace PMS_API_BAL.Interfaces
         public Task<int> CategoryUserid(int categoryId);
         public Task<bool> CheckCategory(int categoryId);
         public Task<bool> CheckUsersCategory(int categoryId, int userId);
-        public Task<bool> GetCategoryTypeById(int categoryId);
+        public Task<bool> GetCategoryTypeById(int categoryId, int userId);
     }
 }

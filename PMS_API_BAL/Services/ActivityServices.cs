@@ -64,9 +64,9 @@ namespace PMS_API_BAL.Services
             return new PagedList<UserActivity>(activityMainList, totalCount, pageNumber, pageSize);
         }
 
-        public async Task<int> TotalActivities(int userId)
+        public async Task<int> TotalActivitiesCounts(SearchFilter searchFilter)
         {
-            return await dbcontext.UserActivities.Where(u => u.UserId == userId).CountAsync();
+            return await dbcontext.UserActivities.Where(u => u.UserId == searchFilter.userId).CountAsync();
         }
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using PMS_API_BAL.Interfaces;
 using PMS_API_BAL.Services;
@@ -13,6 +14,16 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+string? clientUrl = builder.Configuration.GetValue<string>("ApiSettings:ClientUrl");
+//Add Cross origin resource sharing Policy.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "AllowAllorigin", policy
+        => policy.WithOrigins(clientUrl)
+            .AllowCredentials()
+            .WithMethods("GET"));
+});
 
 // Add DbContext with PostgreSQL connection
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -66,7 +77,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // JWT Authentication
-string key = builder.Configuration.GetValue<string>("Jwt:Key");
+string? key = builder.Configuration.GetValue<string>("Jwt:Key");
 
 builder.Services.AddAuthentication(x =>
 {
@@ -100,7 +111,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseCors();
 app.UseHttpsRedirection();
 app.UseResponseCaching();
 app.UseAuthentication();
@@ -110,12 +121,12 @@ app.UseAuthorization();
 app.Use(async (context, next) =>
 {
     context.Response.GetTypedHeaders().CacheControl =
-        new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
+        new CacheControlHeaderValue()
         {
             Public = true,
             MaxAge = TimeSpan.FromSeconds(30)
         };
-    context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] =
+    context.Response.Headers[HeaderNames.Vary] =
         new string[] { "Accept-Encoding" };
 
     await next();

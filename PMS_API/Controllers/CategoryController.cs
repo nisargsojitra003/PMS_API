@@ -34,17 +34,17 @@ namespace PMS_API.Controllers
         [ResponseCache(Duration = 15)]
         public async Task<ActionResult<PagedList<Category>>> List([FromQuery] SearchFilter searchFilter)
         {
-            int totalCategoryCounts = await _CategoryService.TotalCategoriesCount((int)searchFilter.userId);
+            int totalCategoryCounts = await _CategoryService.TotalCategoriesCount(searchFilter);
 
             string pageNumber = searchFilter.categoryPageNumber ?? "1";
             string pageSize = searchFilter.categoryPageSize ?? "5";
 
             PagedList<Category> categoryList = await _CategoryService.CategoryList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
 
-            CategoryListResponse categoryListResponse = new CategoryListResponse
+            SharedListResponse<Category> categoryListResponse = new SharedListResponse<Category>
             {
                 TotalRecords = totalCategoryCounts,
-                CategoryList = categoryList
+                List = categoryList
             };
 
             return Ok(categoryListResponse);
@@ -68,14 +68,12 @@ namespace PMS_API.Controllers
         {
             try
             {
-                if (id <= 0)
+                if (!await _CategoryService.CheckCategory(id) || id <= 0)
                 {
-                    return BadRequest("Invalid category ID.");
+                    return NotFound();
                 }
 
-                bool typeOfCategory = await _CategoryService.GetCategoryTypeById(id);
-
-                if (!typeOfCategory)
+                if (!await _CategoryService.GetCategoryTypeById(id, userId))
                 {
                     if (!await _CategoryService.CheckCategory(id) || await _CategoryService.CheckUsersCategory(id, userId))
                     {
@@ -117,11 +115,11 @@ namespace PMS_API.Controllers
             {
                 return NotFound();
             }
-            if (await _CategoryService.CheckCategoryNameInDb(addCategory.Name, (int)addCategory.UserId) || await _CategoryService.CheckCategoryCodeInDb(addCategory.Code, (int)addCategory.UserId))
+            if (await _CategoryService.CheckCategoryIfAlreayExist(addCategory))
             {
                 return BadRequest();
             }
-           
+
             await _CategoryService.AddCategoryInDb(addCategory);
 
             string description = activityMessages.add.Replace("{1}", addCategory.Name).Replace("{2}", nameof(EntityNameEnum.category));

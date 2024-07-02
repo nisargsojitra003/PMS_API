@@ -40,17 +40,17 @@ namespace PMS_API.Controllers
                 return BadRequest();
             }
 
-            int totalActivitiesCounts = await _ActivityService.TotalActivities((int)searchFilter.userId);
+            int totalActivitiesCounts = await _ActivityService.TotalActivitiesCounts(searchFilter);
 
             string pageNumber = searchFilter.activityPageNumber ?? "1";
             string pageSize = searchFilter.activityPageSize ?? "5";
 
             PagedList<UserActivity> activityList = await _ActivityService.UserActivityList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
 
-            ActivityListResponse activityListResponse = new ActivityListResponse()
+            SharedListResponse<UserActivity> activityListResponse = new SharedListResponse<UserActivity>()
             {
                 TotalRecords = totalActivitiesCounts,
-                ActivityList = activityList
+                List = activityList
             };
 
             return Ok(activityListResponse);

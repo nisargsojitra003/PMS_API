@@ -17,8 +17,8 @@ namespace PMS_API_BAL.Services
         public async Task<PagedList<Category>> CategoryList(int pageNumber, int pageSize, SearchFilter searchFilter)
         {
             IQueryable<Category> query = dbcontext.Categories
-                            .Where(c => (!c.DeletedAt.HasValue && (c.UserId == searchFilter.userId || c.IsSystem == true)))
-                            .OrderByDescending(c => c.IsSystem == true)
+                            .Where(c => (!c.DeletedAt.HasValue && (c.UserId == searchFilter.userId || c.IsSystem)))
+                            .OrderByDescending(c => c.IsSystem)
                             .ThenBy(c => c.Id).AsQueryable();
 
             if (!string.IsNullOrEmpty(searchFilter.SearchName))
@@ -29,27 +29,18 @@ namespace PMS_API_BAL.Services
 
             if (!string.IsNullOrEmpty(searchFilter.SearchCode))
             {
-                if (!string.IsNullOrEmpty(searchFilter.SearchName))
-                {
-                    query = query.Where(c => c.Code.ToLower().Trim().Contains(searchFilter.SearchCode.ToLower()) && c.Name.ToLower().Trim().Contains(searchFilter.SearchName.ToLower()));
-                }
-                else
-                {
-                    query = query.Where(c => c.Code.ToLower().Trim().Contains(searchFilter.SearchCode.ToLower()));
-                }
+                query = query.Where(c => c.Code.ToLower().Trim().Contains(searchFilter.SearchCode.ToLower()) &&
+                (string.IsNullOrEmpty(searchFilter.SearchName) || c.Name.ToLower().Trim().Contains(searchFilter.SearchName.ToLower())));
+
                 pageNumber = 1;
             }
 
             if (!string.IsNullOrEmpty(searchFilter.description))
             {
-                if (!string.IsNullOrEmpty(searchFilter.SearchName) && (!string.IsNullOrEmpty(searchFilter.SearchCode)))
-                {
-                    query = query.Where(c => c.Code.ToLower().Trim().Contains(searchFilter.SearchCode.ToLower()) && c.Name.ToLower().Trim().Contains(searchFilter.SearchName.ToLower()) && c.Description.ToLower().Trim().Contains(searchFilter.description.ToLower()));
-                }
-                else
-                {
-                    query = query.Where(c => c.Description.ToLower().Trim().Contains(searchFilter.description.ToLower()));
-                }
+                query = query.Where(c => c.Description.ToLower().Trim().Contains(searchFilter.description.ToLower()) &&
+                (string.IsNullOrEmpty(searchFilter.SearchName) || c.Name.ToLower().Trim().Contains(searchFilter.SearchName.ToLower()) &&
+                (string.IsNullOrEmpty(searchFilter.SearchCode) || c.Code.ToLower().Trim().Contains(searchFilter.SearchCode.ToLower()))));
+
                 pageNumber = 1;
             }
 
@@ -112,39 +103,38 @@ namespace PMS_API_BAL.Services
             return new PagedList<Category>(categoryList, totalCount, pageNumber, pageSize);
         }
 
-        public async Task<int> TotalCategoriesCount(int userId)
+        public async Task<int> TotalCategoriesCount(SearchFilter searchFilter)
         {
-            return await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true))).CountAsync();
+            return await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == searchFilter.userId || c.IsSystem == true))).CountAsync();
         }
 
-        public async Task AddCategoryInDb(CategoryDTO addCategory)
+        public async Task AddCategoryInDb(CategoryDTO category)
         {
-            Category category = new Category()
+            Category newCategory = new Category()
             {
-                Name = addCategory.Name,
-                Code = addCategory.Code,
+                Name = category.Name,
+                Code = category.Code,
                 CreatedAt = DateTime.Now,
                 IsSystem = false,
-                Description = addCategory.Description,
-                UserId = addCategory.UserId
+                Description = category.Description,
+                UserId = category.UserId
             };
 
-            await dbcontext.Categories.AddAsync(category);
+            await dbcontext.Categories.AddAsync(newCategory);
             await dbcontext.SaveChangesAsync();
         }
 
-        public async Task<bool> CheckCategoryNameInDb(string categoryName, int userId)
+        public async Task<bool> CheckCategoryIfAlreayExist(CategoryDTO category)
         {
             return await dbcontext.Categories
-                .AnyAsync(c => (c.Name.ToLower().Trim() == categoryName.ToLower().Trim() && c.UserId == userId) ||
-                               (c.Name.ToLower().Trim() == categoryName.ToLower().Trim() && c.IsSystem == true));
+                .AnyAsync(c => (c.Name.ToLower().Trim() == category.Name.ToLower().Trim() && (c.UserId == category.UserId || c.IsSystem)) ||
+                               (c.Code.ToLower().Trim() == category.Code.ToLower().Trim() && (c.UserId == category.UserId || c.IsSystem)));
         }
 
-        public async Task<bool> CheckCategoryCodeInDb(string categoryCode, int userId)
+        public async Task<bool> CheckCategoryCodeInDb(CategoryDTO category)
         {
             return await dbcontext.Categories
-                .AnyAsync(c => (c.Code.ToLower().Trim() == categoryCode.ToLower().Trim() && c.UserId == userId) ||
-                               (c.Code.ToLower().Trim() == categoryCode.ToLower().Trim() && c.IsSystem == true));
+                .AnyAsync(c => (c.Code.ToLower().Trim() == category.Code.ToLower().Trim() && (c.UserId == category.UserId || c.IsSystem)));
         }
 
         public async Task<Category> GetCategoryById(int id)
@@ -165,7 +155,7 @@ namespace PMS_API_BAL.Services
         {
             return await dbcontext.Categories.AnyAsync(c =>
                 (c.Name.ToLower() == editCategory.Name.ToLower() || c.Code.ToLower() == editCategory.Code.ToLower()) &&
-                c.Id != currentCategoryId && (c.UserId == userId || c.IsSystem == true));
+                c.Id != currentCategoryId && (c.UserId == userId || c.IsSystem));
         }
 
         public async Task EditCategory(int id, CategoryDTO category)
@@ -204,13 +194,13 @@ namespace PMS_API_BAL.Services
         public async Task<string> CategoryName(int categoryId)
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
-            return category.Name;
+            return category?.Name ?? string.Empty;
         }
 
         public async Task<int> CategoryUserid(int categoryId)
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
-            return (int)category.UserId;
+            return category?.UserId ?? 0;
         }
 
 
@@ -229,28 +219,29 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckCategory(int categoryId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
-            return category != null ? true : false;
+            return await dbcontext.Categories.AnyAsync(c => c.Id == categoryId);
         }
-            
+
         public async Task<bool> CheckUsersCategory(int categoryId, int userId)
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
 
-            int? categoryUserid = category.UserId;
+            int? categoryUserId = category?.UserId;
 
-            return categoryUserid != userId ? true : false;
+            return categoryUserId != userId ? true : false;
         }
 
-        public async Task<bool> GetCategoryTypeById(int categoryId)
+        public async Task<bool> GetCategoryTypeById(int categoryId, int userId)
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
-            if (category == null)
+            AspNetUser? aspNetUser = await dbcontext.AspNetUsers.FirstOrDefaultAsync(a => a.Id == userId);
+
+            if (category == null || aspNetUser == null)
             {
                 return false;
             }
-            bool isSystem = category.IsSystem == true ? true : false;
-            return isSystem;
+
+            return (category.IsSystem && aspNetUser.Role == nameof(RoleEnum.Admin));
         }
     }
 }

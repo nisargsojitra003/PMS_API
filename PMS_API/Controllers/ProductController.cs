@@ -39,17 +39,17 @@ namespace PMS_API.Controllers
         [ResponseCache(Duration = 15)]
         public async Task<ActionResult<PagedList<AddProduct>>> List([FromQuery] SearchFilter searchFilter)
         {
-            int totalProductsCounts = await _ProductService.TotalProducts((int)searchFilter.userId);
+            int totalProductsCounts = await _ProductService.TotalProductsCounts(searchFilter);
 
             string pageNumber = searchFilter.productPageNumber ?? "1";
             string pageSize = searchFilter.productPageSize ?? "5";
 
             PagedList<AddProduct> productList = await _ProductService.ProductList(int.Parse(pageNumber), int.Parse(pageSize), searchFilter);
 
-            ProductListResponse productListResponse = new ProductListResponse
+            SharedListResponse<AddProduct> productListResponse = new SharedListResponse<AddProduct>()
             {
                 TotalRecords = totalProductsCounts,
-                ProductList = productList
+                List = productList
             };
 
             return Ok(productListResponse);
@@ -109,32 +109,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> GetAddCategories(int id)
         {
-            AddProduct categories = await _ProductService.AddProductView(id);
-
-            if (categories == null)
-            {
-                return BadRequest();
-            }
-
-            return Ok(categories);
-        }
-        #endregion
-
-        #region Category List by user for edit method
-        /// <summary>
-        /// Get all category list for custom models
-        /// </summary>
-        /// <returns></returns>
-        [Authorize]
-        [HttpGet("geteditcategorylist", Name = "GetEditCategories")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> GetEditCategories()
-        {
-            EditProduct categories = await _ProductService.EditProductView();
+            AddProduct categories = await _ProductService.AddProductViewCategories(id);
 
             if (categories == null)
             {
@@ -168,8 +143,7 @@ namespace PMS_API.Controllers
                     return NotFound();
                 }
 
-                EditProduct product = await _ProductService.GetProduct(id, userId);
-
+                EditProduct product = await _ProductService.GetProduct(id, userId); 
                 if (product == null)
                 {
                     return BadRequest();
@@ -279,7 +253,7 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> DeleteProductImage(int id)
         {
-            if (id <= 0)
+            if (!await _ProductService.CheckProduct(id) || id <= 0)
             {
                 return BadRequest();
             }
