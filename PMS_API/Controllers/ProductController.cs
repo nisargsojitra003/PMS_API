@@ -60,7 +60,7 @@ namespace PMS_API.Controllers
 
         #region CreateProduct Post Method
         /// <summary>
-        /// Create Product method
+        /// Create Product and Edit Method in Combine
         /// </summary>
         /// <param name="product"></param>
         /// <returns>indicating success or failure</returns>
@@ -78,19 +78,37 @@ namespace PMS_API.Controllers
             {
                 return NotFound();
             }
-
-            if (await _ProductService.CheckProductInDb(product.ProductName, (int)product.CategoryId, (int)product.userId))
+            
+            if (product.ProductId == 0)
             {
-                return BadRequest();
+                if (await _ProductService.CheckProductIfExists(product))
+                {
+                    return BadRequest();
+                }
+
+                await _ProductService.AddProductInDb(product);
+
+                string description = activityMessages.add.Replace("{1}", product.ProductName).Replace("{2}", nameof(EntityNameEnum.product));
+
+                await _CategoryService.CreateActivity(description, (int)product.userId);
+
+                return Ok();
             }
+            else
+            {
+                if (await _ProductService.CheckProductIfExists(product))
+                {
+                    return BadRequest();
+                }
 
-            await _ProductService.AddProductInDb(product);
+                await _ProductService.EditProduct((int)product.ProductId, product);
 
-            string description = activityMessages.add.Replace("{1}", product.ProductName).Replace("{2}", nameof(EntityNameEnum.product));
+                string description = activityMessages.edit.Replace("{1}", product.ProductName).Replace("{2}", nameof(EntityNameEnum.product));
 
-            await _CategoryService.CreateActivity(description, (int)product.userId);
+                await _CategoryService.CreateActivity(description, (int)product.userId);
 
-            return Ok();
+                return Ok();
+            }
         }
         #endregion
 
@@ -138,12 +156,12 @@ namespace PMS_API.Controllers
         {
             try
             {
-                if (!await _ProductService.CheckProduct(id) || await _ProductService.CheckUsersProduct(id, userId))
+                if (!await _ProductService.CheckProduct(id) || !await _ProductService.CheckUsersProduct(id, userId))
                 {
                     return NotFound();
                 }
 
-                EditProduct product = await _ProductService.GetProduct(id, userId); 
+                EditProduct product = await _ProductService.GetProduct(id, userId);
                 if (product == null)
                 {
                     return BadRequest();
@@ -154,42 +172,6 @@ namespace PMS_API.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Failed to delete product: {ex.Message}");
             }
-        }
-        #endregion
-
-        #region Edit Product Put method
-        /// <summary>
-        /// Edit product httpput method
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="editProduct"></param>
-        /// <returns></returns>
-        [Authorize]
-        [HttpPut("update/{id:int}", Name = "UpdateProduct")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Update(int id, [FromForm] EditProductDTO editProduct)
-        {
-            if (id != editProduct.ProductId)
-            {
-                return NotFound();
-            }
-
-            if (await _ProductService.CheckProductEditName(id, editProduct))
-            {
-                return BadRequest();
-            }
-
-            await _ProductService.EditProduct(id, editProduct);
-
-            string description = activityMessages.edit.Replace("{1}", editProduct.ProductName).Replace("{2}", nameof(EntityNameEnum.product));
-            await _CategoryService.CreateActivity(description, (int)editProduct.userId);
-
-            return Ok();
         }
         #endregion
 
@@ -215,7 +197,10 @@ namespace PMS_API.Controllers
                     return BadRequest();
                 }
 
-                await _ProductService.DeleteProduct(id);
+                if (!await _ProductService.DeleteProduct(id))
+                {
+                    return BadRequest();
+                }
 
                 string productName = await _ProductService.ProductName(id);
                 int userId = await _ProductService.ProductUserid(id);

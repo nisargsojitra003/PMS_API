@@ -75,7 +75,7 @@ namespace PMS_API.Controllers
 
                 if (!await _CategoryService.GetCategoryTypeById(id, userId))
                 {
-                    if (!await _CategoryService.CheckCategory(id) || await _CategoryService.CheckUsersCategory(id, userId))
+                    if (!await _CategoryService.CheckUsersCategory(id, userId))
                     {
                         return NotFound();
                     }
@@ -109,23 +109,38 @@ namespace PMS_API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpPost("create", Name = "CreateCategory")]
-        public async Task<ActionResult> Create([FromForm] CategoryDTO addCategory)
+        public async Task<ActionResult> Create([FromForm] CategoryDTO category)
         {
+            if (await _CategoryService.CheckCategoryIfAlreayExist(category)) // add
+            {
+                return BadRequest();
+            }
             if (!ModelState.IsValid)
             {
                 return NotFound();
             }
-            if (await _CategoryService.CheckCategoryIfAlreayExist(addCategory))
+
+            if (category.Id == 0)
             {
-                return BadRequest();
+                await _CategoryService.AddCategoryInDb(category);
+
+                string description = activityMessages.add.Replace("{1}", category.Name).Replace("{2}", nameof(EntityNameEnum.category));
+
+                await _CategoryService.CreateActivity(description, (int)category.UserId);
+
+                return Ok();
+            }
+            else
+            {
+                await _CategoryService.EditCategory((int)category.Id, category);
+
+                string description = activityMessages.edit.Replace("{1}", category.Name).Replace("{2}", nameof(EntityNameEnum.category));
+
+                await _CategoryService.CreateActivity(description, (int)category.UserId);
+
+                return Ok();
             }
 
-            await _CategoryService.AddCategoryInDb(addCategory);
-
-            string description = activityMessages.add.Replace("{1}", addCategory.Name).Replace("{2}", nameof(EntityNameEnum.category));
-            await _CategoryService.CreateActivity(description, (int)addCategory.UserId);
-
-            return Ok();
         }
         #endregion
 

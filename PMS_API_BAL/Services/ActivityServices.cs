@@ -27,26 +27,16 @@ namespace PMS_API_BAL.Services
                 pageNumber = 1;
             }
 
-            if (activityList.Count() >= 2)
+            if (activityList.Count() >= 2 && searchFilter.sortTypeActivity != 0)
             {
-                switch (searchFilter.sortTypeActivity)
+                activityList = (ActivitySortType)searchFilter.sortTypeActivity switch
                 {
-                    case 1:
-                        activityList = activityList.OrderBy(c => c.CreatedAt);
-                        break;
-                    case 2:
-                        activityList = activityList.OrderByDescending(c => c.CreatedAt);
-                        break;
-                    case 3:
-                        activityList = activityList.OrderBy(c => c.Description);
-                        break;
-                    case 4:
-                        activityList = activityList.OrderByDescending(c => c.Description);
-                        break;
-                    default:
-                        activityList = activityList.AsQueryable();
-                        break;
-                }
+                    ActivitySortType.CreatedAtAsc => activityList.OrderBy(c => c.CreatedAt),
+                    ActivitySortType.CreatedAtDesc => activityList.OrderByDescending(c => c.CreatedAt),
+                    ActivitySortType.DescriptionAsc => activityList.OrderBy(c => c.Description),
+                    ActivitySortType.DescriptionDesc => activityList.OrderByDescending(c => c.Description),
+                    _ => activityList.AsQueryable(),
+                };
             }
 
             int totalCount = activityList.Count();

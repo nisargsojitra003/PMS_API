@@ -8,11 +8,11 @@ namespace PMS_API_BAL.Interfaces
         public Task<int> TotalProductsCounts(SearchFilter searchFilter);
         public Task<EditProduct> GetProduct(int id, int userId);
         public Task AddProductInDb(AddProductDTO addProduct);
-        public Task EditProduct(int productId, EditProductDTO editProduct);
-        public Task DeleteProduct(int productId);
+        public Task EditProduct(int productId, AddProductDTO editProduct);
+        public Task<bool> DeleteProduct(int productId);
         public Task<AddProduct> AddProductViewCategories(int userId);
-        public Task<bool> CheckProductInDb(string productName, int categoryId, int userId);
-        public Task<bool> CheckProductEditName(int productId, EditProductDTO editProduct);
+        public Task<bool> CheckProductInDb(AddProductDTO addProduct);
+        public Task<bool> CheckProductEditName(int productId, AddProductDTO editProduct);
         public Task<bool> CheckProductNameExist(string productName, int categoryId, int userId);
         public Task DeleteProductImage(int productId);
         public Task<DashboardData> UserDashboardData(int userId);
@@ -20,5 +20,7 @@ namespace PMS_API_BAL.Interfaces
         public Task<int> ProductUserid(int productId);
         public Task<bool> CheckProduct(int productId);
         public Task<bool> CheckUsersProduct(int productId, int userId);
+        public Task<bool> CheckProductIfExists(AddProductDTO productDto);
+
     }
 }

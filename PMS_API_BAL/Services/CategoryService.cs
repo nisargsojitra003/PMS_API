@@ -44,45 +44,24 @@ namespace PMS_API_BAL.Services
                 pageNumber = 1;
             }
 
-            if (query.Count() >= 2)
+            if (query.Count() >= 2 && searchFilter.sortType != 0)
             {
-                switch (searchFilter.sortType)
+                query = (CategorySortType)searchFilter.sortType switch
                 {
-                    case 1:
-                        query = query.OrderBy(c => c.Name);
-                        break;
-                    case 2:
-                        query = query.OrderByDescending(c => c.Name);
-                        break;
-                    case 3:
-                        query = query.OrderBy(c => c.Code);
-                        break;
-                    case 4:
-                        query = query.OrderByDescending(c => c.Code);
-                        break;
-                    case 5:
-                        query = query.OrderBy(c => c.CreatedAt);
-                        break;
-                    case 6:
-                        query = query.OrderByDescending(c => c.CreatedAt);
-                        break;
-                    case 7:
-                        query = query.OrderBy(c => c.ModifiedAt);
-                        break;
-                    case 8:
-                        query = query.OrderByDescending(c => c.ModifiedAt);
-                        break;
-                    case 9:
-                        query = query.OrderBy(c => c.Description);
-                        break;
-                    case 10:
-                        query = query.OrderByDescending(c => c.Description);
-                        break;
-                    default:
-                        query = query.AsQueryable();
-                        break;
-                }
+                    CategorySortType.NameAsc => query.OrderBy(c => c.Name),
+                    CategorySortType.NameDesc => query.OrderByDescending(c => c.Name),
+                    CategorySortType.CodeAsc => query.OrderBy(c => c.Code),
+                    CategorySortType.CodeDesc => query.OrderByDescending(c => c.Code),
+                    CategorySortType.CreatedAtAsc => query.OrderBy(c => c.CreatedAt),
+                    CategorySortType.CreatedAtDesc => query.OrderByDescending(c => c.CreatedAt),
+                    CategorySortType.ModifiedAtAsc => query.OrderBy(c => c.ModifiedAt),
+                    CategorySortType.ModifiedAtDesc => query.OrderByDescending(c => c.ModifiedAt),
+                    CategorySortType.DescriptionAsc => query.OrderBy(c => c.Description),
+                    CategorySortType.DescriptionDesc => query.OrderByDescending(c => c.Description),
+                    _ => query.AsQueryable(),
+                };
             }
+
 
             int totalCount = query.Count();
 
@@ -126,16 +105,10 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckCategoryIfAlreayExist(CategoryDTO category)
         {
-            return await dbcontext.Categories
-                .AnyAsync(c => (c.Name.ToLower().Trim() == category.Name.ToLower().Trim() && (c.UserId == category.UserId || c.IsSystem)) ||
-                               (c.Code.ToLower().Trim() == category.Code.ToLower().Trim() && (c.UserId == category.UserId || c.IsSystem)));
+            return await dbcontext.Categories.AnyAsync(c =>(c.UserId == category.UserId || c.IsSystem) &&c.Id != category.Id &&
+                        (c.Name.ToLower().Trim() == category.Name.ToLower().Trim() || c.Code.ToLower().Trim() == category.Code.ToLower().Trim()));
         }
 
-        public async Task<bool> CheckCategoryCodeInDb(CategoryDTO category)
-        {
-            return await dbcontext.Categories
-                .AnyAsync(c => (c.Code.ToLower().Trim() == category.Code.ToLower().Trim() && (c.UserId == category.UserId || c.IsSystem)));
-        }
 
         public async Task<Category> GetCategoryById(int id)
         {
@@ -151,10 +124,10 @@ namespace PMS_API_BAL.Services
             return getCategory;
         }
 
-        public async Task<bool> IsCategoryNameOrCodeExist(CategoryDTO editCategory, int currentCategoryId, int userId)
+        public async Task<bool> IsCategoryNameOrCodeExist(CategoryDTO category, int currentCategoryId, int userId)
         {
             return await dbcontext.Categories.AnyAsync(c =>
-                (c.Name.ToLower() == editCategory.Name.ToLower() || c.Code.ToLower() == editCategory.Code.ToLower()) &&
+                (c.Name.ToLower() == category.Name.ToLower() || c.Code.ToLower() == category.Code.ToLower()) &&
                 c.Id != currentCategoryId && (c.UserId == userId || c.IsSystem));
         }
 
@@ -176,8 +149,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CategoryCount(int categoryId)
         {
-            int productListCount = await dbcontext.Products.Where(p => (p.CategoryId == categoryId && p.DeletedAt == null)).CountAsync();
-            return productListCount == 0 ? true : false;
+            return await dbcontext.Products.AnyAsync(p => (p.CategoryId == categoryId && !p.DeletedAt.HasValue));
         }
 
         public async Task DeleteCategory(int categoryId)
@@ -224,24 +196,16 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckUsersCategory(int categoryId, int userId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
-
-            int? categoryUserId = category?.UserId;
-
-            return categoryUserId != userId ? true : false;
+            return await dbcontext.Categories.AnyAsync(c => (c.Id == categoryId && c.UserId == userId));
         }
 
         public async Task<bool> GetCategoryTypeById(int categoryId, int userId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
-            AspNetUser? aspNetUser = await dbcontext.AspNetUsers.FirstOrDefaultAsync(a => a.Id == userId);
+            bool categoryExists = await dbcontext.Categories.AnyAsync(c => c.Id == categoryId && c.IsSystem);
+            bool userExistsAndIsAdmin = await dbcontext.AspNetUsers.AnyAsync(a => a.Id == userId && a.Role == nameof(RoleEnum.Admin));
 
-            if (category == null || aspNetUser == null)
-            {
-                return false;
-            }
-
-            return (category.IsSystem && aspNetUser.Role == nameof(RoleEnum.Admin));
+            return categoryExists && userExistsAndIsAdmin;
         }
+
     }
 }

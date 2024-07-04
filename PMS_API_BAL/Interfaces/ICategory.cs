@@ -9,7 +9,6 @@ namespace PMS_API_BAL.Interfaces
         public Task<int> TotalCategoriesCount(SearchFilter searchFilter);
         public Task AddCategoryInDb(CategoryDTO addCategory);
         public Task<bool> CheckCategoryIfAlreayExist(CategoryDTO category);
-        public Task<bool> CheckCategoryCodeInDb(CategoryDTO category);
         public Task<Category> GetCategoryById(int id);
         public Task<bool> IsCategoryNameOrCodeExist(CategoryDTO editCategory, int currentCategoryId, int userId);
         public Task EditCategory(int id, CategoryDTO category);

@@ -28,27 +28,18 @@ namespace PMS_API_BAL.Services
 
             if (!string.IsNullOrEmpty(searchFilter.searchCategoryTag))
             {
-                if (!string.IsNullOrEmpty(searchFilter.searchProduct))
-                {
-                    query = query.Where(p => p.Categorytag.ToLower().Contains(searchFilter.searchCategoryTag.ToLower()) && p.Name.ToLower().Contains(searchFilter.searchProduct.ToLower()));
-                }
-                else
-                {
-                    query = query.Where(p => p.Categorytag.ToLower().Contains(searchFilter.searchCategoryTag.ToLower()));
-                }
+                query = query.Where(c => c.Categorytag.ToLower().Trim().Contains(searchFilter.searchCategoryTag.ToLower()) &&
+                (string.IsNullOrEmpty(searchFilter.searchProduct) || c.Name.ToLower().Trim().Contains(searchFilter.searchProduct.ToLower())));
+
                 pageNumber = 1;
             }
 
             if (!string.IsNullOrEmpty(searchFilter.searchDescription))
             {
-                if (!string.IsNullOrEmpty(searchFilter.searchProduct) && (!string.IsNullOrEmpty(searchFilter.searchCategoryTag)))
-                {
-                    query = query.Where(p => p.Description.ToLower().Contains(searchFilter.searchDescription.ToLower()) && p.Name.ToLower().Contains(searchFilter.searchProduct.ToLower()) && p.Categorytag.ToLower().Contains(searchFilter.searchCategoryTag.ToLower()));
-                }
-                else
-                {
-                    query = query.Where(p => p.Description.ToLower().Contains(searchFilter.searchDescription.ToLower()));
-                }
+                query = query.Where(c => c.Description.ToLower().Trim().Contains(searchFilter.searchDescription.ToLower()) &&
+                (string.IsNullOrEmpty(searchFilter.searchProduct) || c.Name.ToLower().Trim().Contains(searchFilter.searchProduct.ToLower()) &&
+                (string.IsNullOrEmpty(searchFilter.searchCategoryTag) || c.Categorytag.ToLower().Trim().Contains(searchFilter.searchCategoryTag.ToLower()))));
+
                 pageNumber = 1;
             }
 
@@ -58,56 +49,26 @@ namespace PMS_API_BAL.Services
 
             }
 
-            if (query.Count() >= 2)
+            if (query.Count() >= 2 && searchFilter.sortTypeProduct != 0)
             {
-                switch (searchFilter.sortTypeProduct)
+                query = (ProductSortType)searchFilter.sortTypeProduct switch
                 {
-                    case 1:
-                        query = query.OrderBy(p => p.Name);
-                        break;
-                    case 2:
-                        query = query.OrderByDescending(p => p.Name);
-                        break;
-                    case 3:
-                        query = query.OrderBy(p => p.Price);
-                        break;
-                    case 4:
-                        query = query.OrderByDescending(p => p.Price);
-                        break;
-                    case 5:
-                        query = query.OrderBy(p => p.Description);
-                        break;
-                    case 6:
-                        query = query.OrderByDescending(p => p.Description);
-                        break;
-                    case 7:
-                        query = query.OrderBy(p => p.CreatedAt);
-                        break;
-                    case 8:
-                        query = query.OrderByDescending(p => p.CreatedAt);
-                        break;
-                    case 9:
-                        query = query.OrderBy(p => p.ModifiedAt);
-                        break;
-                    case 10:
-                        query = query.OrderByDescending(p => p.ModifiedAt);
-                        break;
-                    case 11:
-                        query = query.OrderBy(p => p.Categorytag);
-                        break;
-                    case 12:
-                        query = query.OrderByDescending(p => p.Categorytag);
-                        break;
-                    case 13:
-                        query = query.OrderBy(p => p.Category.Name);
-                        break;
-                    case 14:
-                        query = query.OrderByDescending(p => p.Category.Name);
-                        break;
-                    default:
-                        query = query.AsQueryable();
-                        break;
-                }
+                    ProductSortType.NameAsc => query.OrderBy(p => p.Name),
+                    ProductSortType.NameDesc => query.OrderByDescending(p => p.Name),
+                    ProductSortType.PriceAsc => query.OrderBy(p => p.Price),
+                    ProductSortType.PriceDesc => query.OrderByDescending(p => p.Price),
+                    ProductSortType.DescriptionAsc => query.OrderBy(p => p.Description),
+                    ProductSortType.DescriptionDesc => query.OrderByDescending(p => p.Description),
+                    ProductSortType.CreatedAtAsc => query.OrderBy(p => p.CreatedAt),
+                    ProductSortType.CreatedAtDesc => query.OrderByDescending(p => p.CreatedAt),
+                    ProductSortType.ModifiedAtAsc => query.OrderBy(p => p.ModifiedAt),
+                    ProductSortType.ModifiedAtDesc => query.OrderByDescending(p => p.ModifiedAt),
+                    ProductSortType.CategoryTagAsc => query.OrderBy(p => p.Categorytag),
+                    ProductSortType.CategoryTagDesc => query.OrderByDescending(p => p.Categorytag),
+                    ProductSortType.CategoryNameAsc => query.OrderBy(p => p.Category.Name),
+                    ProductSortType.CategoryNameDesc => query.OrderByDescending(p => p.Category.Name),
+                    _ => query.AsQueryable(),
+                };
             }
 
             int totalCount = query.Count();
@@ -146,9 +107,9 @@ namespace PMS_API_BAL.Services
             return addProduct;
         }
 
-        public async Task<bool> CheckProductInDb(string productName, int categoryId, int userId)
+        public async Task<bool> CheckProductInDb(AddProductDTO addProduct)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Name.ToLower() == productName.ToLower() && p.CategoryId == categoryId && p.UserId == userId);
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Name.ToLower() == addProduct.ProductName.ToLower() && p.CategoryId == addProduct.CategoryId && p.UserId == addProduct.userId);
             return product != null ? true : false;
         }
 
@@ -210,7 +171,7 @@ namespace PMS_API_BAL.Services
         public async Task<EditProduct> GetProduct(int id, int userId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == id) ?? null;
-           
+
             List<Category> categoryList = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true)))
                 .OrderBy(c => c.Id).ToListAsync();
 
@@ -242,7 +203,7 @@ namespace PMS_API_BAL.Services
             return addProduct;
         }
 
-        public async Task<bool> CheckProductEditName(int productId, EditProductDTO editProduct)
+        public async Task<bool> CheckProductEditName(int productId, AddProductDTO editProduct)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
 
@@ -263,7 +224,7 @@ namespace PMS_API_BAL.Services
             return await dbcontext.Products.AnyAsync(p => p.Name.ToLower() == productName.ToLower() && p.CategoryId == categoryId && p.UserId == userId);
         }
 
-        public async Task EditProduct(int productId, EditProductDTO editProduct)
+        public async Task EditProduct(int productId, AddProductDTO editProduct)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
 
@@ -332,16 +293,21 @@ namespace PMS_API_BAL.Services
             }
         }
 
-        public async Task DeleteProduct(int productId)
+        public async Task<bool> DeleteProduct(int productId)
         {
             Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
 
-            if (product != null)
+            if (product?.DeletedAt == null)
             {
                 product.DeletedAt = DateTime.Now;
                 product.ModifiedAt = DateTime.Now;
                 dbcontext.Products.Update(product);
                 await dbcontext.SaveChangesAsync();
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -382,15 +348,26 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProduct(int productId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Id == productId);
-            return product != null ? true : false;
+            bool checkProduct = await dbcontext.Products.AnyAsync(c => c.Id == productId);
+            return checkProduct;
         }
 
         public async Task<bool> CheckUsersProduct(int productId, int userId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(c => c.Id == productId);
-            int? productUserId = product?.UserId;
-            return productUserId != userId ? true : false;
+            bool checkUser = await dbcontext.Products.AnyAsync(c => c.Id == productId && c.UserId == userId);
+            return checkUser;
+        }
+
+        public async Task<bool> CheckProductIfExists(AddProductDTO productDto)
+        {
+            bool checkProduct =  await dbcontext.Products.AnyAsync(p =>
+                p.Name.ToLower() == productDto.ProductName.ToLower() &&
+                p.CategoryId == productDto.CategoryId &&
+                p.UserId == productDto.userId &&
+                (!productDto.ProductId.HasValue || p.Id != productDto.ProductId.Value)
+            );
+
+            return checkProduct;
         }
     }
 }
