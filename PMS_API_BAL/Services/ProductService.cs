@@ -101,7 +101,7 @@ namespace PMS_API_BAL.Services
         {
             AddProduct addProduct = new AddProduct()
             {
-                categories = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true)))
+                categories = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem)))
                                                        .OrderBy(c => c.Id).ToListAsync()
             };
             return addProduct;
@@ -109,8 +109,9 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProductInDb(AddProductDTO addProduct)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Name.ToLower() == addProduct.ProductName.ToLower() && p.CategoryId == addProduct.CategoryId && p.UserId == addProduct.userId);
-            return product != null ? true : false;
+            return await dbcontext.Products.AnyAsync(p => p.Name.ToLower() == addProduct.ProductName.ToLower() && 
+                                                     p.CategoryId == addProduct.CategoryId && 
+                                                     p.UserId == addProduct.userId);
         }
 
 
@@ -205,7 +206,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProductEditName(int productId, AddProductDTO editProduct)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId) ?? null;
 
             if (product == null)
             {
@@ -295,7 +296,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> DeleteProduct(int productId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId) ?? null;
 
             if (product?.DeletedAt == null)
             {
@@ -314,21 +315,28 @@ namespace PMS_API_BAL.Services
 
         public async Task<string> ProductName(int productId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-            return product?.Name ?? string.Empty;
+            return (await dbcontext.Categories.FirstOrDefaultAsync(p => p.Id == productId))?.Name ?? "";
         }
 
         public async Task<int> ProductUserid(int productId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-            return product?.UserId ?? 0;
+            return (await dbcontext.Categories.FirstOrDefaultAsync(p => p.Id == productId))?.UserId ?? 0;
         }
 
         public async Task DeleteProductImage(int productId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-            if (product?.Filename != null)
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId) ?? null;
+
+            if (product != null && product?.Filename != null)
             {
+                string fileName = product.Filename;
+                string filePath = Path.Combine(Directory.GetCurrentDirectory(), "UploadDocuments", fileName);
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+
                 product.Filename = null;
                 dbcontext.Products.Update(product);
                 await dbcontext.SaveChangesAsync();
@@ -348,26 +356,21 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProduct(int productId)
         {
-            bool checkProduct = await dbcontext.Products.AnyAsync(c => c.Id == productId);
-            return checkProduct;
+            return await dbcontext.Products.AnyAsync(c => c.Id == productId);
         }
 
         public async Task<bool> CheckUsersProduct(int productId, int userId)
         {
-            bool checkUser = await dbcontext.Products.AnyAsync(c => c.Id == productId && c.UserId == userId);
-            return checkUser;
+            return await dbcontext.Products.AnyAsync(c => c.Id == productId && c.UserId == userId);
         }
 
         public async Task<bool> CheckProductIfExists(AddProductDTO productDto)
         {
-            bool checkProduct =  await dbcontext.Products.AnyAsync(p =>
+            return await dbcontext.Products.AnyAsync(p =>
                 p.Name.ToLower() == productDto.ProductName.ToLower() &&
                 p.CategoryId == productDto.CategoryId &&
                 p.UserId == productDto.userId &&
-                (!productDto.ProductId.HasValue || p.Id != productDto.ProductId.Value)
-            );
-
-            return checkProduct;
+                (!productDto.ProductId.HasValue || p.Id != productDto.ProductId.Value));
         }
     }
 }

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMS_API_BAL.Interfaces;
 using PMS_API_DAL.Models.CustomeModel;
-using System.Runtime.InteropServices;
+using System.Reflection.Metadata.Ecma335;
 
 namespace PMS_API.Controllers
 {
@@ -78,37 +78,25 @@ namespace PMS_API.Controllers
             {
                 return NotFound();
             }
-            
+
+            if (await _ProductService.CheckProductIfExists(product))
+            {
+                return BadRequest();
+            }
+
             if (product.ProductId == 0)
             {
-                if (await _ProductService.CheckProductIfExists(product))
-                {
-                    return BadRequest();
-                }
-
                 await _ProductService.AddProductInDb(product);
-
-                string description = activityMessages.add.Replace("{1}", product.ProductName).Replace("{2}", nameof(EntityNameEnum.product));
-
-                await _CategoryService.CreateActivity(description, (int)product.userId);
-
-                return Ok();
             }
             else
             {
-                if (await _ProductService.CheckProductIfExists(product))
-                {
-                    return BadRequest();
-                }
-
                 await _ProductService.EditProduct((int)product.ProductId, product);
-
-                string description = activityMessages.edit.Replace("{1}", product.ProductName).Replace("{2}", nameof(EntityNameEnum.product));
-
-                await _CategoryService.CreateActivity(description, (int)product.userId);
-
-                return Ok();
             }
+
+            string description = product.ProductId == 0 ? activityMessages.add : activityMessages.edit;
+            await _CategoryService.CreateActivity(description.Replace("{1}", product.ProductName).Replace("{2}", nameof(EntityNameEnum.product)), (int)product.userId);
+            
+            return Ok();
         }
         #endregion
 

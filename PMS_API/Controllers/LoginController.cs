@@ -59,7 +59,7 @@ namespace PMS_API.Controllers
 
                 UserResponse userResponse = new UserResponse()
                 {
-                    ActionName = actionName,
+                    ActionName = actionName,    
                     ControllerName = controllerName,
                     JwtToken = jwtToken,
                     UserRole = user.Role,

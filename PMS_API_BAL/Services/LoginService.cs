@@ -20,7 +20,7 @@ namespace PMS_API_BAL.Services
         }
         public async Task<bool> ValidateUserCredentials(UserInfo userInfo)
         {
-            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(u => u.Email.ToLower() == userInfo.Email.ToLower());
+            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(u => u.Email.ToLower() == userInfo.Email.ToLower()) ?? null;
 
             if (user != null)
             {
@@ -32,7 +32,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<AspNetUser> LoggedInUserInfo(UserInfo userInfo)
         {
-            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(a => a.Email == userInfo.Email);
+            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(a => a.Email == userInfo.Email) ?? null;
             return user;
         }
 

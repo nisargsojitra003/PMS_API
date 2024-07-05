@@ -49,7 +49,7 @@ namespace PMS_API_BAL.Services
 
         public bool ValidateToken(string token, out JwtSecurityToken jwtSecurityToken)
         {
-            jwtSecurityToken = null;
+            jwtSecurityToken = new JwtSecurityToken();
 
             if (token == null)
             {

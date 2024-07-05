@@ -87,7 +87,7 @@ namespace PMS_API_BAL.Services
             return await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == searchFilter.userId || c.IsSystem == true))).CountAsync();
         }
 
-        public async Task AddCategoryInDb(CategoryDTO category)
+        public async Task Create(CategoryDTO category)
         {
             Category newCategory = new Category()
             {
@@ -103,9 +103,9 @@ namespace PMS_API_BAL.Services
             await dbcontext.SaveChangesAsync();
         }
 
-        public async Task<bool> CheckCategoryIfAlreayExist(CategoryDTO category)
+        public async Task<bool> CheckCategoryIfAlreadyExist(CategoryDTO category)
         {
-            return await dbcontext.Categories.AnyAsync(c =>(c.UserId == category.UserId || c.IsSystem) &&c.Id != category.Id &&
+            return await dbcontext.Categories.AnyAsync(c => (c.UserId == category.UserId || c.IsSystem) && c.Id != category.Id &&
                         (c.Name.ToLower().Trim() == category.Name.ToLower().Trim() || c.Code.ToLower().Trim() == category.Code.ToLower().Trim()));
         }
 
@@ -113,15 +113,8 @@ namespace PMS_API_BAL.Services
         public async Task<Category> GetCategoryById(int id)
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == id);
+            return category;
 
-            Category getCategory = new Category()
-            {
-                Id = category.Id,
-                Name = category.Name,
-                Code = category.Code,
-                Description = category.Description
-            };
-            return getCategory;
         }
 
         public async Task<bool> IsCategoryNameOrCodeExist(CategoryDTO category, int currentCategoryId, int userId)
@@ -131,18 +124,18 @@ namespace PMS_API_BAL.Services
                 c.Id != currentCategoryId && (c.UserId == userId || c.IsSystem));
         }
 
-        public async Task EditCategory(int id, CategoryDTO category)
+        public async Task Update(CategoryDTO category)
         {
-            Category? mainCategory = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == id);
+            Category? originalCategory = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == category.Id) ?? null;
 
-            if (mainCategory != null)
+            if (originalCategory != null)
             {
-                mainCategory.Name = category.Name;
-                mainCategory.Code = category.Code;
-                mainCategory.Description = category.Description;
-                mainCategory.ModifiedAt = DateTime.Now;
+                originalCategory.Name = category.Name;
+                originalCategory.Code = category.Code;
+                originalCategory.Description = category.Description;
+                originalCategory.ModifiedAt = DateTime.Now;
 
-                dbcontext.Categories.Update(mainCategory);
+                dbcontext.Categories.Update(originalCategory);
                 await dbcontext.SaveChangesAsync();
             }
         }
@@ -154,7 +147,7 @@ namespace PMS_API_BAL.Services
 
         public async Task DeleteCategory(int categoryId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId) ?? null;
             if (category != null)
             {
                 category.DeletedAt = DateTime.Now;
@@ -165,13 +158,13 @@ namespace PMS_API_BAL.Services
 
         public async Task<string> CategoryName(int categoryId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId) ?? null;
             return category?.Name ?? string.Empty;
         }
 
         public async Task<int> CategoryUserid(int categoryId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId) ?? null;
             return category?.UserId ?? 0;
         }
 
@@ -189,9 +182,9 @@ namespace PMS_API_BAL.Services
             await dbcontext.SaveChangesAsync();
         }
 
-        public async Task<bool> CheckCategory(int categoryId)
+        public async Task<bool> CheckIfCategoryExists(int categoryId)
         {
-            return await dbcontext.Categories.AnyAsync(c => c.Id == categoryId);
+            return await dbcontext.Categories.AnyAsync(c => (c.Id == categoryId && !c.DeletedAt.HasValue));
         }
 
         public async Task<bool> CheckUsersCategory(int categoryId, int userId)

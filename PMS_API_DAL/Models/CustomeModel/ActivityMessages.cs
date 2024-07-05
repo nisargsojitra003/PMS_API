@@ -28,6 +28,9 @@
         User
     }
 
+    /// <summary>
+    /// Sort Type of Category Enum.
+    /// </summary>
     public enum CategorySortType 
     { 
 
@@ -43,6 +46,9 @@
         DescriptionDesc = 10
     }
 
+    /// <summary>
+    /// Sort Type of Product Enum.
+    /// </summary>
     public enum ProductSortType 
     {
         NameAsc = 1,
@@ -61,6 +67,9 @@
         CategoryNameDesc = 14
     }
 
+    /// <summary>
+    /// Sort Type of UserActivity Enum.
+    /// </summary>
     public enum ActivitySortType 
     {
         CreatedAtAsc = 1,
@@ -68,7 +77,4 @@
         DescriptionAsc = 3,
         DescriptionDesc = 4,
     }
-
-
-
 }

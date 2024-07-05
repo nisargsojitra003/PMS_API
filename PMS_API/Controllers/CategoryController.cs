@@ -68,7 +68,7 @@ namespace PMS_API.Controllers
         {
             try
             {
-                if (!await _CategoryService.CheckCategory(id) || id <= 0)
+                if (!await _CategoryService.CheckIfCategoryExists(id) || id <= 0)
                 {
                     return NotFound();
                 }
@@ -111,10 +111,11 @@ namespace PMS_API.Controllers
         [HttpPost("create", Name = "CreateCategory")]
         public async Task<ActionResult> Create([FromForm] CategoryDTO category)
         {
-            if (await _CategoryService.CheckCategoryIfAlreayExist(category)) // add
+            if (await _CategoryService.CheckCategoryIfAlreadyExist(category))
             {
                 return BadRequest();
             }
+
             if (!ModelState.IsValid)
             {
                 return NotFound();
@@ -122,59 +123,16 @@ namespace PMS_API.Controllers
 
             if (category.Id == 0)
             {
-                await _CategoryService.AddCategoryInDb(category);
-
-                string description = activityMessages.add.Replace("{1}", category.Name).Replace("{2}", nameof(EntityNameEnum.category));
-
-                await _CategoryService.CreateActivity(description, (int)category.UserId);
-
-                return Ok();
+                await _CategoryService.Create(category);
             }
             else
             {
-                await _CategoryService.EditCategory((int)category.Id, category);
-
-                string description = activityMessages.edit.Replace("{1}", category.Name).Replace("{2}", nameof(EntityNameEnum.category));
-
-                await _CategoryService.CreateActivity(description, (int)category.UserId);
-
-                return Ok();
+                await _CategoryService.Update(category);
             }
 
-        }
-        #endregion
-
-        #region CategoryUpdatePutMethod
-        /// <summary>
-        /// Updates an existing category.
-        /// </summary>
-        /// <param name="id">The ID of the category to update.</param>
-        /// <param name="category">The updated category data.</param>
-        /// <returns>Indicating success or failure</returns>
-        [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [HttpPut("edit/{id:int}", Name = "EditCategory")]
-        public async Task<IActionResult> Update(int id, [FromForm] CategoryDTO category)
-        {
-            if (id != category.Id)
-            {
-                return NotFound();
-            }
-            if (await _CategoryService.IsCategoryNameOrCodeExist(category, id, (int)category.UserId))
-            {
-                return BadRequest();
-            }
-
-            await _CategoryService.EditCategory(id, category);
-
-            string description = activityMessages.edit.Replace("{1}", category.Name).Replace("{2}", nameof(EntityNameEnum.category));
-
-            await _CategoryService.CreateActivity(description, (int)category.UserId);
-
+            string description = category.Id == 0 ? activityMessages.add : activityMessages.edit;
+            await _CategoryService.CreateActivity(description.Replace("{1}", category.Name).Replace("{2}", nameof(EntityNameEnum.category)), (int)category.UserId);
+           
             return Ok();
         }
         #endregion
@@ -194,7 +152,7 @@ namespace PMS_API.Controllers
         [HttpPost("delete/{id:int}", Name = "DeleteCategory")]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!await _CategoryService.CheckCategory(id) || !await _CategoryService.CategoryCount(id))
+            if (!await _CategoryService.CheckIfCategoryExists(id) || await _CategoryService.CategoryCount(id))
             {
                 return BadRequest();
             }
@@ -203,6 +161,11 @@ namespace PMS_API.Controllers
 
             string categoryName = await _CategoryService.CategoryName(id);
             int userid = await _CategoryService.CategoryUserid(id);
+
+            if (categoryName == "" || userid == 0)
+            {
+                return BadRequest();
+            }
 
             string description = activityMessages.delete.Replace("{1}", categoryName).Replace("{2}", nameof(EntityNameEnum.category));
 
