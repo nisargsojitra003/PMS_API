@@ -24,7 +24,6 @@ namespace PMS_API_DAL.Models.CustomeModel
         [RegularExpression(@"^\d{1,8}(\.\d{1,2})?$", ErrorMessage = "The Price must be a number with up to 8 digits and up to 2 decimal places")]
         public decimal? Price { get; set; }
 
-
         public IFormFile? Fileupload { get; set; }
 
         [Required(ErrorMessage = "Categorytag is required")]

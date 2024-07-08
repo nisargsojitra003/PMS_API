@@ -9,9 +9,11 @@ namespace PMS_API_BAL.Services
     public class CategoryService : ICategory
     {
         private readonly ApplicationDbContext dbcontext;
-        public CategoryService(ApplicationDbContext context)
+        private readonly IRepository<Category> repo;
+        public CategoryService(ApplicationDbContext context, IRepository<Category> _repo)
         {
             dbcontext = context;
+            repo = _repo;
         }
 
         public async Task<PagedList<Category>> CategoryList(int pageNumber, int pageSize, SearchFilter searchFilter)
@@ -84,7 +86,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<int> TotalCategoriesCount(SearchFilter searchFilter)
         {
-            return await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == searchFilter.userId || c.IsSystem == true))).CountAsync();
+            return await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == searchFilter.userId || c.IsSystem))).CountAsync();
         }
 
         public async Task Create(CategoryDTO category)
@@ -98,9 +100,7 @@ namespace PMS_API_BAL.Services
                 Description = category.Description,
                 UserId = category.UserId
             };
-
-            await dbcontext.Categories.AddAsync(newCategory);
-            await dbcontext.SaveChangesAsync();
+            await repo.AddAsyncAndSave(newCategory);
         }
 
         public async Task<bool> CheckCategoryIfAlreadyExist(CategoryDTO category)
@@ -114,7 +114,6 @@ namespace PMS_API_BAL.Services
         {
             Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == id);
             return category;
-
         }
 
         public async Task<bool> IsCategoryNameOrCodeExist(CategoryDTO category, int currentCategoryId, int userId)
@@ -126,7 +125,7 @@ namespace PMS_API_BAL.Services
 
         public async Task Update(CategoryDTO category)
         {
-            Category? originalCategory = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == category.Id) ?? null;
+            Category? originalCategory = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == category.Id);
 
             if (originalCategory != null)
             {
@@ -135,8 +134,7 @@ namespace PMS_API_BAL.Services
                 originalCategory.Description = category.Description;
                 originalCategory.ModifiedAt = DateTime.Now;
 
-                dbcontext.Categories.Update(originalCategory);
-                await dbcontext.SaveChangesAsync();
+                await repo.UpdateAsyncAndSave(originalCategory);
             }
         }
 
@@ -147,27 +145,25 @@ namespace PMS_API_BAL.Services
 
         public async Task DeleteCategory(int categoryId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId) ?? null;
+            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
             if (category != null)
             {
                 category.DeletedAt = DateTime.Now;
-                dbcontext.Categories.Update(category);
-                await dbcontext.SaveChangesAsync();
+                //dbcontext.Categories.Update(category);
+                //await dbcontext.SaveChangesAsync();
+                await repo.UpdateAsyncAndSave(category);
             }
         }
 
         public async Task<string> CategoryName(int categoryId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId) ?? null;
-            return category?.Name ?? string.Empty;
+            return (await dbcontext.Categories.FirstOrDefaultAsync(p => p.Id == categoryId))?.Name ?? "";
         }
 
         public async Task<int> CategoryUserid(int categoryId)
         {
-            Category? category = await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId) ?? null;
-            return category?.UserId ?? 0;
+            return (await dbcontext.Categories.FirstOrDefaultAsync(p => p.Id == categoryId))?.UserId ?? 0;
         }
-
 
         public async Task CreateActivity(string description, int userId)
         {

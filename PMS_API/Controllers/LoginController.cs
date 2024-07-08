@@ -98,6 +98,7 @@ namespace PMS_API.Controllers
             if (!await _LoginService.CheckIfEmailExist(userInfo.Email))
             {
                 await _LoginService.CreateNewUser(userInfo);
+
                 return Ok();
             }
             else
@@ -121,6 +122,7 @@ namespace PMS_API.Controllers
         public IActionResult Logout()
         {
             Response.Headers.Remove("Authorization");
+
             return Ok();
         }
         #endregion

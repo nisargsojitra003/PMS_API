@@ -12,11 +12,13 @@ namespace PMS_API_BAL.Services
         private readonly ApplicationDbContext dbcontext;
         private readonly ICategory _CategoryService;
         private readonly ActivityMessages activityMessages;
-        public LoginService(ApplicationDbContext context, ICategory categoryService, ActivityMessages _activityMessages)
+        private readonly IRepository<AspNetUser> repo;
+        public LoginService(ApplicationDbContext context, ICategory categoryService, ActivityMessages _activityMessages, IRepository<AspNetUser> _repo)
         {
             dbcontext = context;
             _CategoryService = categoryService;
             activityMessages = _activityMessages;
+            repo = _repo;
         }
         public async Task<bool> ValidateUserCredentials(UserInfo userInfo)
         {
@@ -53,8 +55,9 @@ namespace PMS_API_BAL.Services
                 CreatedAt = DateTime.UtcNow,
             };
 
-            await dbcontext.AspNetUsers.AddAsync(aspNetUser);
-            await dbcontext.SaveChangesAsync();
+            //await dbcontext.AspNetUsers.AddAsync(aspNetUser);
+            //await dbcontext.SaveChangesAsync();
+            await repo.AddAsyncAndSave(aspNetUser);
 
             //Add entry in useractivity When account created successfully.
             string description = activityMessages.createAccountRecord.Replace("{1}", createUser.Email);

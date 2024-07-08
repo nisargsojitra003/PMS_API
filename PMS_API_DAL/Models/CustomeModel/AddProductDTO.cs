@@ -31,8 +31,5 @@ namespace PMS_API_DAL.Models.CustomeModel
 
         [Required(ErrorMessage = "Category is required")]
         public int? CategoryId { get; set; }
-
-
-
     }
 }

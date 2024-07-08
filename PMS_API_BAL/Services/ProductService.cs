@@ -9,9 +9,12 @@ namespace PMS_API_BAL.Services
     public class ProductService : IProduct
     {
         private readonly ApplicationDbContext dbcontext;
-        public ProductService(ApplicationDbContext context)
+        private readonly IRepository<Product> repo;
+
+        public ProductService(ApplicationDbContext context, IRepository<Product> _repo)
         {
             dbcontext = context;
+            repo = _repo;
         }
 
         public async Task<PagedList<AddProduct>> ProductList(int pageNumber, int pageSize, SearchFilter searchFilter)
@@ -109,8 +112,8 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProductInDb(AddProductDTO addProduct)
         {
-            return await dbcontext.Products.AnyAsync(p => p.Name.ToLower() == addProduct.ProductName.ToLower() && 
-                                                     p.CategoryId == addProduct.CategoryId && 
+            return await dbcontext.Products.AnyAsync(p => p.Name.ToLower() == addProduct.ProductName.ToLower() &&
+                                                     p.CategoryId == addProduct.CategoryId &&
                                                      p.UserId == addProduct.userId);
         }
 
@@ -146,9 +149,7 @@ namespace PMS_API_BAL.Services
                     Description = addProduct.Description.Trim(),
                     UserId = addProduct.userId
                 };
-                await dbcontext.Products.AddAsync(product);
-                await dbcontext.SaveChangesAsync();
-
+                await repo.AddAsyncAndSave(product);
             }
             else
             {
@@ -163,17 +164,16 @@ namespace PMS_API_BAL.Services
                     Description = addProduct.Description.Trim(),
                     UserId = addProduct.userId
                 };
-                await dbcontext.Products.AddAsync(product);
-                await dbcontext.SaveChangesAsync();
+                await repo.AddAsyncAndSave(product);
             }
 
         }
 
         public async Task<EditProduct> GetProduct(int id, int userId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == id) ?? null;
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == id);
 
-            List<Category> categoryList = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true)))
+            List<Category> categoryList = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem)))
                 .OrderBy(c => c.Id).ToListAsync();
 
             List<CategoryList> categoryList1 = new List<CategoryList>();
@@ -187,7 +187,7 @@ namespace PMS_API_BAL.Services
                 });
             }
 
-            EditProduct addProduct = new EditProduct()
+            EditProduct getProduct = new EditProduct()
             {
                 ProductId = product.Id,
                 ProductName = product.Name,
@@ -201,7 +201,7 @@ namespace PMS_API_BAL.Services
                 CategoryName = (await dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == product.CategoryId))?.Name
             };
 
-            return addProduct;
+            return getProduct;
         }
 
         public async Task<bool> CheckProductEditName(int productId, AddProductDTO editProduct)
@@ -225,9 +225,9 @@ namespace PMS_API_BAL.Services
             return await dbcontext.Products.AnyAsync(p => p.Name.ToLower() == productName.ToLower() && p.CategoryId == categoryId && p.UserId == userId);
         }
 
-        public async Task EditProduct(int productId, AddProductDTO editProduct)
+        public async Task EditProduct(AddProductDTO editProduct)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == editProduct.ProductId);
 
             if (editProduct.Fileupload != null)
             {
@@ -273,8 +273,7 @@ namespace PMS_API_BAL.Services
                     product.Price = editProduct.Price;
                     product.Description = editProduct.Description.Trim();
                 }
-                dbcontext.Products.Update(product);
-                await dbcontext.SaveChangesAsync();
+                await repo.UpdateAsyncAndSave(product);
             }
             else
             {
@@ -288,8 +287,7 @@ namespace PMS_API_BAL.Services
                     product.Price = editProduct.Price;
                     product.Description = editProduct.Description.Trim();
 
-                    dbcontext.Products.Update(product);
-                    await dbcontext.SaveChangesAsync();
+                    await repo.UpdateAsyncAndSave(product);
                 }
             }
         }
@@ -306,26 +304,23 @@ namespace PMS_API_BAL.Services
                 await dbcontext.SaveChangesAsync();
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
 
         public async Task<string> ProductName(int productId)
         {
-            return (await dbcontext.Categories.FirstOrDefaultAsync(p => p.Id == productId))?.Name ?? "";
+            return (await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId))?.Name ?? "";
         }
 
         public async Task<int> ProductUserid(int productId)
         {
-            return (await dbcontext.Categories.FirstOrDefaultAsync(p => p.Id == productId))?.UserId ?? 0;
+            return (await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId))?.UserId ?? 0;
         }
 
         public async Task DeleteProductImage(int productId)
         {
-            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId) ?? null;
+            Product? product = await dbcontext.Products.FirstOrDefaultAsync(p => p.Id == productId);
 
             if (product != null && product?.Filename != null)
             {
@@ -338,8 +333,9 @@ namespace PMS_API_BAL.Services
                 }
 
                 product.Filename = null;
-                dbcontext.Products.Update(product);
-                await dbcontext.SaveChangesAsync();
+
+                await repo.UpdateAsyncAndSave(product);
+
             }
         }
 
@@ -356,7 +352,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProduct(int productId)
         {
-            return await dbcontext.Products.AnyAsync(c => c.Id == productId);
+            return await dbcontext.Products.AnyAsync(c => c.Id == productId && !c.DeletedAt.HasValue);
         }
 
         public async Task<bool> CheckUsersProduct(int productId, int userId)
@@ -367,10 +363,10 @@ namespace PMS_API_BAL.Services
         public async Task<bool> CheckProductIfExists(AddProductDTO productDto)
         {
             return await dbcontext.Products.AnyAsync(p =>
-                p.Name.ToLower() == productDto.ProductName.ToLower() &&
-                p.CategoryId == productDto.CategoryId &&
-                p.UserId == productDto.userId &&
-                (!productDto.ProductId.HasValue || p.Id != productDto.ProductId.Value));
+                                   p.Name.ToLower() == productDto.ProductName.ToLower() &&
+                                   p.CategoryId == productDto.CategoryId &&
+                                   p.UserId == productDto.userId &&
+                                   (!productDto.ProductId.HasValue || p.Id != productDto.ProductId.Value));
         }
     }
 }

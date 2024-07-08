@@ -1,6 +1,5 @@
-﻿using PMS_API_DAL.Models.CustomeModel;
-using PMS_API_DAL.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using PMS_API_DAL.Models;
+using PMS_API_DAL.Models.CustomeModel;
 
 namespace PMS_API_BAL.Interfaces
 {

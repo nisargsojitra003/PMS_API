@@ -32,6 +32,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Add services to the DI container
 builder.Services.AddScoped<IProduct, ProductService>();
 builder.Services.AddScoped<ICategory, CategoryService>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IJwt, JwtServices>();
 builder.Services.AddScoped<ILogin, LoginService>();
 builder.Services.AddScoped<IActivity, ActivityServices>();

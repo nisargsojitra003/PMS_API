@@ -33,7 +33,6 @@
     /// </summary>
     public enum CategorySortType 
     { 
-
         NameAsc = 1,
         NameDesc = 2,   
         CodeAsc = 3,

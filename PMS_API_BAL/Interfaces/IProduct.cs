@@ -8,7 +8,7 @@ namespace PMS_API_BAL.Interfaces
         public Task<int> TotalProductsCounts(SearchFilter searchFilter);
         public Task<EditProduct> GetProduct(int id, int userId);
         public Task AddProductInDb(AddProductDTO addProduct);
-        public Task EditProduct(int productId, AddProductDTO editProduct);
+        public Task EditProduct(AddProductDTO editProduct);
         public Task<bool> DeleteProduct(int productId);
         public Task<AddProduct> AddProductViewCategories(int userId);
         public Task<bool> CheckProductInDb(AddProductDTO addProduct);
