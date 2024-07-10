@@ -300,8 +300,9 @@ namespace PMS_API_BAL.Services
             {
                 product.DeletedAt = DateTime.Now;
                 product.ModifiedAt = DateTime.Now;
-                dbcontext.Products.Update(product);
-                await dbcontext.SaveChangesAsync();
+
+                await repo.UpdateAsyncAndSave(product);
+
                 return true;
             }
             return false;
@@ -335,7 +336,6 @@ namespace PMS_API_BAL.Services
                 product.Filename = null;
 
                 await repo.UpdateAsyncAndSave(product);
-
             }
         }
 
@@ -362,7 +362,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckProductIfExists(AddProductDTO productDto)
         {
-            return await dbcontext.Products.AnyAsync(p =>
+            return await dbcontext.Products.Where(p => !p.DeletedAt.HasValue).AnyAsync(p =>
                                    p.Name.ToLower() == productDto.ProductName.ToLower() &&
                                    p.CategoryId == productDto.CategoryId &&
                                    p.UserId == productDto.userId &&

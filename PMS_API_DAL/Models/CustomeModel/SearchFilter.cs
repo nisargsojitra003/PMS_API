@@ -22,6 +22,7 @@
 
         //UserActivity list search filter property
         public string? searchActivity { get; set; }
+        public string? createdAtText { get; set; }
         public int? sortTypeActivity { get; set; } = 0;
         public string? activityPageSize { get; set; }
         public string? activityPageNumber { get; set; }

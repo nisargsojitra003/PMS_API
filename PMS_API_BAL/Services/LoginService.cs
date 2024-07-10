@@ -22,7 +22,7 @@ namespace PMS_API_BAL.Services
         }
         public async Task<bool> ValidateUserCredentials(UserInfo userInfo)
         {
-            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(u => u.Email.ToLower() == userInfo.Email.ToLower()) ?? null;
+            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(u => u.Email.ToLower() == userInfo.Email.ToLower());
 
             if (user != null)
             {
@@ -34,7 +34,7 @@ namespace PMS_API_BAL.Services
 
         public async Task<AspNetUser> LoggedInUserInfo(UserInfo userInfo)
         {
-            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(a => a.Email == userInfo.Email) ?? null;
+            AspNetUser? user = await dbcontext.AspNetUsers.FirstOrDefaultAsync(a => a.Email == userInfo.Email);
             return user;
         }
 
@@ -55,8 +55,6 @@ namespace PMS_API_BAL.Services
                 CreatedAt = DateTime.UtcNow,
             };
 
-            //await dbcontext.AspNetUsers.AddAsync(aspNetUser);
-            //await dbcontext.SaveChangesAsync();
             await repo.AddAsyncAndSave(aspNetUser);
 
             //Add entry in useractivity When account created successfully.

@@ -105,8 +105,9 @@ namespace PMS_API_BAL.Services
 
         public async Task<bool> CheckCategoryIfAlreadyExist(CategoryDTO category)
         {
-            return await dbcontext.Categories.AnyAsync(c => (c.UserId == category.UserId || c.IsSystem) && c.Id != category.Id &&
+            return await dbcontext.Categories.Where(c => !c.DeletedAt.HasValue).AnyAsync(c => (c.UserId == category.UserId || c.IsSystem) && c.Id != category.Id &&
                         (c.Name.ToLower().Trim() == category.Name.ToLower().Trim() || c.Code.ToLower().Trim() == category.Code.ToLower().Trim()));
+
         }
 
 
@@ -149,8 +150,6 @@ namespace PMS_API_BAL.Services
             if (category != null)
             {
                 category.DeletedAt = DateTime.Now;
-                //dbcontext.Categories.Update(category);
-                //await dbcontext.SaveChangesAsync();
                 await repo.UpdateAsyncAndSave(category);
             }
         }

@@ -19,10 +19,10 @@ namespace PMS_API.Controllers
 
         #region Login Method
         /// <summary>
-        /// Check user is validate or not?
+        /// Check user is validate or not? and if validate than generate JWT-Token.
         /// </summary>
         /// <param name="userInfo"></param>
-        /// <returns>indicating success or failure.</returns>
+        /// <returns>indicating success or failure. and generate user response and return</returns>
         [HttpPost("login", Name = "UserLogin")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status200OK)]

@@ -27,6 +27,12 @@ namespace PMS_API_BAL.Services
                 pageNumber = 1;
             }
 
+            if (!string.IsNullOrEmpty(searchFilter.createdAtText))
+            {
+                activityList = activityList.Where(c=> c.CreatedAt.ToString().ToLower().Trim().Contains(searchFilter.createdAtText.ToLower().Trim()) &&
+                (string.IsNullOrEmpty(searchFilter.searchActivity) || c.Description.ToLower().Trim().Contains(searchFilter.searchActivity.ToLower())));
+            }
+
             if (activityList.Count() >= 2 && searchFilter.sortTypeActivity != 0)
             {
                 activityList = (ActivitySortType)searchFilter.sortTypeActivity switch

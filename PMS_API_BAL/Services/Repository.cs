@@ -16,7 +16,14 @@ namespace PMS_API_BAL.Services
 
         public async Task SaveChangesAsync()
         {
-            await _dbContext.SaveChangesAsync();
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error occured while saving entity, {ex.Message}");
+            }
         }
 
         public async Task AddAsyncAndSave(T model)
