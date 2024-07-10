@@ -3,6 +3,8 @@ using PMS_API_BAL.Interfaces;
 using PMS_API_DAL.DataContext;
 using PMS_API_DAL.Models;
 using PMS_API_DAL.Models.CustomeModel;
+using System.Globalization;
+using System;
 
 namespace PMS_API_BAL.Services
 {
@@ -29,7 +31,7 @@ namespace PMS_API_BAL.Services
 
             if (!string.IsNullOrEmpty(searchFilter.createdAtText))
             {
-                activityList = activityList.Where(c=> c.CreatedAt.ToString().ToLower().Trim().Contains(searchFilter.createdAtText.ToLower().Trim()) &&
+                activityList = activityList.Where(c => c.CreatedAt.ToLocalTime().ToString().ToLower().Trim().Contains(searchFilter.createdAtText.ToLower().Trim()) &&
                 (string.IsNullOrEmpty(searchFilter.searchActivity) || c.Description.ToLower().Trim().Contains(searchFilter.searchActivity.ToLower())));
             }
 
