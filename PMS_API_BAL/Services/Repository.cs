@@ -43,7 +43,7 @@ namespace PMS_API_BAL.Services
         {
             try
             {
-                _dbContext.Update(model);
+                _dbContext.Update(model);   
                 await _dbContext.SaveChangesAsync();
             }
             catch (Exception ex)

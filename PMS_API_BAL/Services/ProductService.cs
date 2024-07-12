@@ -343,7 +343,7 @@ namespace PMS_API_BAL.Services
         {
             DashboardData dashboardData = new DashboardData()
             {
-                totalCategories = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem == true))).CountAsync(),
+                totalCategories = await dbcontext.Categories.Where(c => (!c.DeletedAt.HasValue && (c.UserId == userId || c.IsSystem))).CountAsync(),
                 totalProducts = await dbcontext.Products.Where(p => (!p.DeletedAt.HasValue && p.UserId == userId)).CountAsync()
             };
 
